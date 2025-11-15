@@ -1,0 +1,18 @@
+===========================================
+ADMIN ACCOUNTS
+===========================================
+Last Updated: 11/14/2025, 6:13:20 PM
+
+Account 1:
+-----------
+Name: Admin User
+Email: admin@test.com
+Password: Admin123!
+ID: 1762957360836_9fre45pzu
+
+Account 2:
+-----------
+Name: Masha Kujou
+Email: MashaKujou@admin.com
+Password: MashaKujou09
+ID: admin_1763112146259

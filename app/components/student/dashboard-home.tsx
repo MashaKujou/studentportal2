@@ -1,0 +1,110 @@
+"use client"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/app/contexts/auth-context"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { studentService } from "@/app/services/student-service"
+import { useMemo } from "react"
+import { calculateAttendancePercentage } from "@/lib/helpers"
+
+export const StudentDashboardHome = () => {
+  const { user } = useAuth()
+
+  const stats = useMemo(() => {
+    if (!user) return { attendance: 0, grades: 0, requests: 0 }
+    const attendance = studentService.getAttendance(user.id)
+    const grades = studentService.getGrades(user.id)
+    const requests = studentService.getRequests(user.id)
+
+    const present = attendance.filter((a) => a.status === "present").length
+    const attendancePercentage = calculateAttendancePercentage(present, attendance.length)
+
+    return {
+      attendance: attendancePercentage.toFixed(1),
+      grades: grades.length,
+      requests: requests.filter((r) => r.status === "pending").length,
+    }
+  }, [user])
+
+  if (!user) return null
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Welcome, {user.firstName}</h1>
+        <p className="text-muted-foreground mt-2">
+          Grade {(user as any).grade} - Section {(user as any).section}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.attendance}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Current attendance rate</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Grades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.grades}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total grades entered</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.requests}</div>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Links</CardTitle>
+          <CardDescription>Access commonly used features</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Link href="/student/grades">
+              <Button variant="outline" className="w-full bg-transparent">
+                View Grades
+              </Button>
+            </Link>
+            <Link href="/student/attendance">
+              <Button variant="outline" className="w-full bg-transparent">
+                Check Attendance
+              </Button>
+            </Link>
+            <Link href="/student/schedule">
+              <Button variant="outline" className="w-full bg-transparent">
+                View Schedule
+              </Button>
+            </Link>
+            <Link href="/student/requests">
+              <Button variant="outline" className="w-full bg-transparent">
+                Make Request
+              </Button>
+            </Link>
+            <Link href="/student/settings">
+              <Button variant="outline" className="w-full bg-transparent">
+                Settings
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
