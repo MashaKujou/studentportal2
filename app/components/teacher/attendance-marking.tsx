@@ -11,6 +11,8 @@ import { generateId } from "@/lib/helpers"
 interface AttendanceRecord {
   id: string
   classId: string
+  subjectCode: string
+  className: string
   date: string
   records: {
     studentId: string
@@ -29,6 +31,9 @@ export const TeacherAttendanceMarking = () => {
   const [students, setStudents] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [savedAttendance, setSavedAttendance] = useState<AttendanceRecord[]>([])
+  const [viewingRecord, setViewingRecord] = useState<AttendanceRecord | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [currentAttendanceId, setCurrentAttendanceId] = useState("")
 
   useEffect(() => {
     if (user) {
@@ -36,7 +41,7 @@ export const TeacherAttendanceMarking = () => {
       setClasses(teacherClasses)
       
       // Load saved attendance
-      const saved = localStorage.getItem("attendance_records")
+      const saved = localStorage.getItem("attendance")
       if (saved) {
         setSavedAttendance(JSON.parse(saved))
       }
@@ -59,10 +64,14 @@ export const TeacherAttendanceMarking = () => {
           initialAttendance[student.id] = "present"
         })
         setAttendance(initialAttendance)
+        
+        const shortId = generateId("ATT").split("_")[1]
+        setCurrentAttendanceId(shortId)
       }
     } else {
       setStudents([])
       setAttendance({})
+      setCurrentAttendanceId("")
     }
   }, [selectedClass, classes])
 
@@ -75,9 +84,12 @@ export const TeacherAttendanceMarking = () => {
 
     setIsSubmitting(true)
     try {
+      const classInfo = classes.find((c) => c.id === selectedClass)
       const attendanceRecord: AttendanceRecord = {
-        id: generateId("ATT"),
+        id: currentAttendanceId, // Use the simple ID format
         classId: selectedClass,
+        subjectCode: classInfo?.subjectCode || "",
+        className: classInfo?.subjectName || "",
         date: selectedDate,
         records: students.map((student) => ({
           studentId: student.id,
@@ -87,9 +99,9 @@ export const TeacherAttendanceMarking = () => {
         createdAt: new Date().toISOString(),
       }
 
-      // Save to localStorage
-      const allRecords = [...savedAttendance, attendanceRecord]
-      localStorage.setItem("attendance_records", JSON.stringify(allRecords))
+      const existingRecords = JSON.parse(localStorage.getItem("attendance") || "[]")
+      const allRecords = [...existingRecords, attendanceRecord]
+      localStorage.setItem("attendance", JSON.stringify(allRecords))
       setSavedAttendance(allRecords)
 
       alert("Attendance submitted successfully!")
@@ -98,8 +110,30 @@ export const TeacherAttendanceMarking = () => {
       setSelectedClass("")
       setAttendance({})
       setStudents([])
+      setCurrentAttendanceId("")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleViewDetails = (record: AttendanceRecord) => {
+    setViewingRecord(record)
+    setIsViewModalOpen(true)
+  }
+
+  const handleDeleteAttendance = (recordId: string) => {
+    if (!confirm("Are you sure you want to delete this attendance record? This action cannot be undone.")) {
+      return
+    }
+    
+    const existingRecords = JSON.parse(localStorage.getItem("attendance") || "[]")
+    const updatedRecords = existingRecords.filter((r: AttendanceRecord) => r.id !== recordId)
+    localStorage.setItem("attendance", JSON.stringify(updatedRecords))
+    setSavedAttendance(updatedRecords)
+    
+    if (viewingRecord?.id === recordId) {
+      setIsViewModalOpen(false)
+      setViewingRecord(null)
     }
   }
 
@@ -156,7 +190,7 @@ export const TeacherAttendanceMarking = () => {
             <div className="space-y-4 mt-6">
               <div className="border-b pb-2">
                 <h3 className="font-semibold text-lg">
-                  Attendance #{generateId("NUM").split("_")[1]}
+                  Attendance #{currentAttendanceId}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Date: {new Date(selectedDate).toLocaleDateString()} | Class: {selectedClassInfo?.subjectCode}
@@ -248,11 +282,32 @@ export const TeacherAttendanceMarking = () => {
                         <p className="text-sm text-muted-foreground">
                           Date: {new Date(record.date).toLocaleDateString()}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ID: {record.id}
+                        </p>
                       </div>
-                      <div className="text-right text-sm">
-                        <p className="text-green-600">Present: {presentCount}</p>
-                        <p className="text-red-600">Absent: {absentCount}</p>
-                        <p className="text-yellow-600">Late: {lateCount}</p>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-right text-sm">
+                          <p className="text-green-600">Present: {presentCount}</p>
+                          <p className="text-red-600">Absent: {absentCount}</p>
+                          <p className="text-yellow-600">Late: {lateCount}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewDetails(record)}
+                          >
+                            View Details
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleDeleteAttendance(record.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -261,6 +316,85 @@ export const TeacherAttendanceMarking = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {isViewModalOpen && viewingRecord && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">Attendance Details</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Attendance ID: {viewingRecord.id}</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setIsViewModalOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Class</p>
+                    <p className="font-medium">{viewingRecord.subjectCode} - {viewingRecord.className}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium">{new Date(viewingRecord.date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-3 font-medium">Student Name</th>
+                        <th className="text-center p-3 font-medium">Present</th>
+                        <th className="text-center p-3 font-medium">Absent</th>
+                        <th className="text-center p-3 font-medium">Late</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {viewingRecord.records.map((student, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="p-3">{student.studentName}</td>
+                          <td className="p-3 text-center">
+                            <input 
+                              type="checkbox" 
+                              checked={student.status === "present"} 
+                              disabled 
+                              className="w-5 h-5"
+                            />
+                          </td>
+                          <td className="p-3 text-center">
+                            <input 
+                              type="checkbox" 
+                              checked={student.status === "absent"} 
+                              disabled 
+                              className="w-5 h-5"
+                            />
+                          </td>
+                          <td className="p-3 text-center">
+                            <input 
+                              type="checkbox" 
+                              checked={student.status === "late"} 
+                              disabled 
+                              className="w-5 h-5"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

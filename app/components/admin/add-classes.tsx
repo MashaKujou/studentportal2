@@ -39,6 +39,10 @@ export const AddClasses = () => {
   const [attendanceSearchId, setAttendanceSearchId] = useState("")
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
   const [attendanceSearched, setAttendanceSearched] = useState(false)
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<"all" | "present" | "absent" | "late">("all")
+  const [academicLevelFilter, setAcademicLevelFilter] = useState("")
+  const [yearFilter, setYearFilter] = useState("")
 
   const [selectedClassStudents, setSelectedClassStudents] = useState<any[]>([])
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
@@ -180,6 +184,48 @@ export const AddClasses = () => {
     
     setAttendanceRecords(filtered)
     setAttendanceSearched(true)
+    setStatusFilter("all")
+    setSelectedRecordId(null)
+  }
+
+  const handleStatusFilterClick = (recordId: string, status: "present" | "absent" | "late") => {
+    if (selectedRecordId === recordId && statusFilter === status) {
+      setStatusFilter("all")
+      setSelectedRecordId(null)
+    } else {
+      setStatusFilter(status)
+      setSelectedRecordId(recordId)
+    }
+  }
+
+  const getFilteredStudents = (record: any) => {
+    let filtered = record.records
+
+    if (selectedRecordId === record.id && statusFilter !== "all") {
+      filtered = filtered.filter((r: any) => r.status === statusFilter)
+    }
+
+    if (academicLevelFilter || yearFilter) {
+      const allStudents = userStorage.getStudents()
+      filtered = filtered.filter((r: any) => {
+        const student = allStudents.find((s) => s.id === r.studentId)
+        if (!student) return false
+        
+        let matches = true
+        if (academicLevelFilter && student.academicLevel !== academicLevelFilter) {
+          matches = false
+        }
+        if (yearFilter) {
+          const studentYear = student.year || student.grade
+          if (studentYear !== yearFilter) {
+            matches = false
+          }
+        }
+        return matches
+      })
+    }
+
+    return filtered
   }
 
   const handleViewStudents = (classData: any) => {
@@ -581,6 +627,76 @@ export const AddClasses = () => {
               <CardDescription>Search and view attendance by ID or view all records</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <Card className="bg-muted/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Filter Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Academic Level</label>
+                      <select
+                        value={academicLevelFilter}
+                        onChange={(e) => {
+                          setAcademicLevelFilter(e.target.value)
+                          setYearFilter("")
+                        }}
+                        className="w-full p-2 border rounded text-sm"
+                      >
+                        <option value="">All Levels</option>
+                        <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High School</option>
+                        <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma</option>
+                        <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Year/Grade</label>
+                      <select
+                        value={yearFilter}
+                        onChange={(e) => setYearFilter(e.target.value)}
+                        className="w-full p-2 border rounded text-sm"
+                        disabled={!academicLevelFilter}
+                      >
+                        <option value="">All Years</option>
+                        {academicLevelFilter === ACADEMIC_LEVELS.SENIOR_HIGH &&
+                          SENIOR_HIGH_GRADES.map((grade) => (
+                            <option key={grade} value={grade}>
+                              Grade {grade}
+                            </option>
+                          ))}
+                        {academicLevelFilter === ACADEMIC_LEVELS.DIPLOMA &&
+                          DIPLOMA_YEARS.map((year) => (
+                            <option key={year} value={year}>
+                              Year {year}
+                            </option>
+                          ))}
+                        {academicLevelFilter === ACADEMIC_LEVELS.BACHELOR &&
+                          BACHELOR_YEARS.map((year) => (
+                            <option key={year} value={year}>
+                              Year {year}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {(academicLevelFilter || yearFilter) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => {
+                        setAcademicLevelFilter("")
+                        setYearFilter("")
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+              
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter Attendance ID or Class ID..."
@@ -594,6 +710,10 @@ export const AddClasses = () => {
                     setAttendanceSearchId("")
                     setAttendanceRecords([])
                     setAttendanceSearched(false)
+                    setStatusFilter("all")
+                    setSelectedRecordId(null)
+                    setAcademicLevelFilter("")
+                    setYearFilter("")
                   }}
                 >
                   Clear
@@ -612,79 +732,158 @@ export const AddClasses = () => {
                         Found {attendanceRecords.length} attendance record(s)
                       </p>
                       
-                      {attendanceRecords.map((record) => (
-                        <Card key={record.id} className="border-2">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <CardTitle className="text-lg">Attendance #{record.id}</CardTitle>
-                                <CardDescription>
-                                  Date: {new Date(record.date).toLocaleDateString()}
-                                </CardDescription>
-                              </div>
-                              <div className="text-right text-sm">
-                                <p className="font-medium">{record.subjectCode}</p>
-                                <p className="text-muted-foreground">{record.className}</p>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              <div className="grid grid-cols-3 gap-4 p-3 bg-muted rounded-lg">
-                                <div className="text-center">
-                                  <p className="text-2xl font-bold text-green-600">
-                                    {record.records.filter((r: any) => r.status === "present").length}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">Present</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-2xl font-bold text-red-600">
-                                    {record.records.filter((r: any) => r.status === "absent").length}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">Absent</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-2xl font-bold text-orange-600">
-                                    {record.records.filter((r: any) => r.status === "late").length}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">Late</p>
-                                </div>
-                              </div>
+                      {attendanceRecords.map((record) => {
+                        const filteredStudents = getFilteredStudents(record)
+                        
+                        // Hide entire record if no students match the filters
+                        if (filteredStudents.length === 0 && (academicLevelFilter || yearFilter)) {
+                          return null
+                        }
+                        
+                        const presentCount = filteredStudents.filter((r: any) => r.status === "present").length
+                        const absentCount = filteredStudents.filter((r: any) => r.status === "absent").length
+                        const lateCount = filteredStudents.filter((r: any) => r.status === "late").length
 
-                              <div className="border rounded-lg overflow-hidden">
-                                <table className="w-full">
-                                  <thead className="bg-muted">
-                                    <tr>
-                                      <th className="text-left p-3 font-medium">Student Name</th>
-                                      <th className="text-center p-3 font-medium">Status</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {record.records.map((student: any, idx: number) => (
-                                      <tr key={idx} className="border-t">
-                                        <td className="p-3">{student.studentName}</td>
-                                        <td className="p-3 text-center">
-                                          <span
-                                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                              student.status === "present"
-                                                ? "bg-green-100 text-green-700"
-                                                : student.status === "absent"
-                                                  ? "bg-red-100 text-red-700"
-                                                  : "bg-orange-100 text-orange-700"
-                                            }`}
-                                          >
-                                            {student.status.toUpperCase()}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                        return (
+                          <Card key={record.id} className="border-2">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <CardTitle className="text-lg">Attendance #{record.id}</CardTitle>
+                                  <CardDescription>
+                                    Date: {new Date(record.date).toLocaleDateString()}
+                                  </CardDescription>
+                                </div>
+                                <div className="text-right text-sm">
+                                  <p className="font-medium">{record.subjectCode}</p>
+                                  <p className="text-muted-foreground">{record.className}</p>
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-4 p-3 bg-muted rounded-lg">
+                                  <button
+                                    onClick={() => handleStatusFilterClick(record.id, "present")}
+                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
+                                      selectedRecordId === record.id && statusFilter === "present"
+                                        ? "bg-green-100 ring-2 ring-green-500"
+                                        : "hover:bg-green-50"
+                                    }`}
+                                  >
+                                    <p className="text-2xl font-bold text-green-600">
+                                      {presentCount}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Present</p>
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusFilterClick(record.id, "absent")}
+                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
+                                      selectedRecordId === record.id && statusFilter === "absent"
+                                        ? "bg-red-100 ring-2 ring-red-500"
+                                        : "hover:bg-red-50"
+                                    }`}
+                                  >
+                                    <p className="text-2xl font-bold text-red-600">
+                                      {absentCount}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Absent</p>
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusFilterClick(record.id, "late")}
+                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
+                                      selectedRecordId === record.id && statusFilter === "late"
+                                        ? "bg-orange-100 ring-2 ring-orange-500"
+                                        : "hover:bg-orange-50"
+                                    }`}
+                                  >
+                                    <p className="text-2xl font-bold text-orange-600">
+                                      {lateCount}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Late</p>
+                                  </button>
+                                </div>
+
+                                {selectedRecordId === record.id && statusFilter !== "all" && (
+                                  <div className="flex items-center justify-between px-3 py-2 bg-blue-50 rounded-lg text-sm">
+                                    <p className="text-blue-700">
+                                      Showing only <strong>{statusFilter}</strong> students
+                                    </p>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setStatusFilter("all")
+                                        setSelectedRecordId(null)
+                                      }}
+                                    >
+                                      Show All
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {(academicLevelFilter || yearFilter) && (
+                                  <div className="px-3 py-2 bg-purple-50 rounded-lg text-sm">
+                                    <p className="text-purple-700">
+                                      Filtered by:{" "}
+                                      {academicLevelFilter && (
+                                        <strong>
+                                          {academicLevelFilter === ACADEMIC_LEVELS.SENIOR_HIGH
+                                            ? "Senior High"
+                                            : academicLevelFilter === ACADEMIC_LEVELS.DIPLOMA
+                                              ? "Diploma"
+                                              : "Bachelor"}
+                                        </strong>
+                                      )}
+                                      {academicLevelFilter && yearFilter && " • "}
+                                      {yearFilter && <strong>Year/Grade {yearFilter}</strong>}
+                                    </p>
+                                  </div>
+                                )}
+
+                                <div className="border rounded-lg overflow-hidden">
+                                  <table className="w-full">
+                                    <thead className="bg-muted">
+                                      <tr>
+                                        <th className="text-left p-3 font-medium">Student Name</th>
+                                        <th className="text-center p-3 font-medium">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {filteredStudents.length === 0 ? (
+                                        <tr>
+                                          <td colSpan={2} className="p-8 text-center text-muted-foreground">
+                                            No students match the selected filters
+                                          </td>
+                                        </tr>
+                                      ) : (
+                                        filteredStudents.map((student: any, idx: number) => (
+                                          <tr key={idx} className="border-t">
+                                            <td className="p-3">{student.studentName}</td>
+                                            <td className="p-3 text-center">
+                                              <span
+                                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                                                  student.status === "present"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : student.status === "absent"
+                                                      ? "bg-red-100 text-red-700"
+                                                      : "bg-orange-100 text-orange-700"
+                                                }`}
+                                              >
+                                                {student.status.toUpperCase()}
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        ))
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
