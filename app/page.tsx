@@ -45,14 +45,14 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">Student Portal</span>
+              <span className="text-xl font-bold">CSA Student Portal</span>
             </div>
             <div className="flex items-center gap-3">
               <Link href="/login">
                 <Button variant="ghost">Login</Button>
               </Link>
               <Link href="/register">
-                <Button>Get Started</Button>
+                <Button>Join us!</Button>
               </Link>
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
                 <Button size="lg" className="w-full sm:w-auto text-base">
-                  Get Started
+                  Create your Account
                 </Button>
               </Link>
               <Link href="/login">
