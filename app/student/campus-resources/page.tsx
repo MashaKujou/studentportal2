@@ -1,9 +1,10 @@
+import { StudentDashboard } from '@/app/components/student/student-dashboard'
 import { StudentCampusResources } from '@/app/components/student/campus-resources'
 
 export default function StudentCampusResourcesPage() {
   return (
-    <main className="flex-1">
+    <StudentDashboard>
       <StudentCampusResources />
-    </main>
+    </StudentDashboard>
   )
 }

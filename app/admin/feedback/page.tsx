@@ -1,9 +1,10 @@
+import { AdminDashboard } from '@/app/components/admin/admin-dashboard'
 import { AdminFeedbackManagement } from '@/app/components/admin/feedback-management'
 
 export default function AdminFeedbackPage() {
   return (
-    <main className="flex-1">
+    <AdminDashboard>
       <AdminFeedbackManagement />
-    </main>
+    </AdminDashboard>
   )
 }

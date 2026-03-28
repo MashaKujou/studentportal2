@@ -1,9 +1,10 @@
+import { AdminDashboard } from '@/app/components/admin/admin-dashboard'
 import { AdminCampusResourcesManagement } from '@/app/components/admin/campus-resources-management'
 
 export default function AdminCampusResourcesPage() {
   return (
-    <main className="flex-1">
+    <AdminDashboard>
       <AdminCampusResourcesManagement />
-    </main>
+    </AdminDashboard>
   )
 }

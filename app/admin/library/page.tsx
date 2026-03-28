@@ -1,9 +1,10 @@
+import { AdminDashboard } from '@/app/components/admin/admin-dashboard'
 import { AdminLibraryManagement } from '@/app/components/admin/library-management'
 
 export default function AdminLibraryPage() {
   return (
-    <main className="flex-1">
+    <AdminDashboard>
       <AdminLibraryManagement />
-    </main>
+    </AdminDashboard>
   )
 }

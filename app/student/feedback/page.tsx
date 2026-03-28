@@ -1,9 +1,10 @@
+import { StudentDashboard } from '@/app/components/student/student-dashboard'
 import { StudentFeedback } from '@/app/components/student/feedback'
 
 export default function StudentFeedbackPage() {
   return (
-    <main className="flex-1">
+    <StudentDashboard>
       <StudentFeedback />
-    </main>
+    </StudentDashboard>
   )
 }

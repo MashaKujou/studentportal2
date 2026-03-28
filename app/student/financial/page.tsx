@@ -1,9 +1,10 @@
+import { StudentDashboard } from '@/app/components/student/student-dashboard'
 import { StudentFinancial } from '@/app/components/student/financial'
 
 export default function StudentFinancialPage() {
   return (
-    <main className="flex-1">
+    <StudentDashboard>
       <StudentFinancial />
-    </main>
+    </StudentDashboard>
   )
 }
