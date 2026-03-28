@@ -22,6 +22,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ children }) 
     { label: "Schedule", href: "/student/schedule" },
     { label: "Documents", href: "/student/documents" },
     { label: "Requests", href: "/student/requests" },
+    { label: "Financial", href: "/student/financial" },
+    { label: "Library", href: "/student/library" },
+    { label: "Campus Resources", href: "/student/campus-resources" },
+    { label: "Notifications", href: "/student/notifications" },
+    { label: "Feedback", href: "/student/feedback" },
     { label: "Contact Admin", href: "/student/contact-admin" },
   ]
 

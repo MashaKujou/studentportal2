@@ -92,6 +92,78 @@ export const REQUEST_MESSAGE_STATUSES = {
   REJECTED: "rejected",
 } as const
 
+export const NOTIFICATION_TYPES = {
+  DEADLINE: "deadline",
+  SCHEDULE_CHANGE: "schedule_change",
+  PAYMENT_DUE: "payment_due",
+  GRADE_POSTED: "grade_posted",
+  REGISTRATION_OPEN: "registration_open",
+  EVENT: "event",
+  SYSTEM: "system",
+  OTHER: "other",
+} as const
+
+export const NOTIFICATION_STATUS = {
+  UNREAD: "unread",
+  READ: "read",
+  ARCHIVED: "archived",
+} as const
+
+export const FINANCIAL_STATUS = {
+  PAID: "paid",
+  PARTIAL: "partial",
+  UNPAID: "unpaid",
+  OVERDUE: "overdue",
+} as const
+
+export const PAYMENT_METHOD = {
+  CASH: "cash",
+  CHECK: "check",
+  BANK_TRANSFER: "bank_transfer",
+  ONLINE: "online",
+  INSTALLMENT: "installment",
+} as const
+
+export const FEEDBACK_STATUS = {
+  NEW: "new",
+  REVIEWING: "reviewing",
+  RESOLVED: "resolved",
+  CLOSED: "closed",
+  REJECTED: "rejected",
+} as const
+
+export const FEEDBACK_CATEGORY = {
+  BUG: "bug",
+  FEATURE_REQUEST: "feature_request",
+  GENERAL: "general",
+  COMPLAINT: "complaint",
+  SUGGESTION: "suggestion",
+} as const
+
+export const BOOK_STATUS = {
+  AVAILABLE: "available",
+  BORROWED: "borrowed",
+  RESERVED: "reserved",
+  LOST: "lost",
+} as const
+
+export const FACILITY_TYPE = {
+  LAB: "lab",
+  CLASSROOM: "classroom",
+  LIBRARY: "library",
+  CAFETERIA: "cafeteria",
+  GYMNASIUM: "gymnasium",
+  AUDITORIUM: "auditorium",
+  OFFICE: "office",
+  OTHER: "other",
+} as const
+
+export const LANGUAGES = {
+  EN: "en",
+  FIL: "fil",
+  ES: "es",
+} as const
+
 export const STORAGE_KEYS = {
   STUDENTS: "student_portal_students",
   TEACHERS: "student_portal_teachers",
@@ -104,6 +176,12 @@ export const STORAGE_KEYS = {
   NOTIFICATIONS: "student_portal_notifications",
   SCHEDULES: "student_portal_schedules",
   DOCUMENTS: "student_portal_documents",
+  FINANCIAL_RECORDS: "student_portal_financial_records",
+  LIBRARY_CATALOG: "student_portal_library_catalog",
+  LIBRARY_CHECKOUTS: "student_portal_library_checkouts",
+  CAMPUS_RESOURCES: "student_portal_campus_resources",
+  FEEDBACK: "student_portal_feedback",
+  USER_PREFERENCES: "student_portal_user_preferences",
 } as const
 
 export const PAGINATION = {
