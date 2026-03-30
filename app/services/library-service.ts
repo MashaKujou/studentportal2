@@ -1,5 +1,11 @@
-import { STORAGE_KEYS } from "@/lib/constants"
-import { storage } from "@/lib/storage"
+'use server'
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export interface Book {
   id: string
@@ -12,6 +18,8 @@ export interface Book {
   description: string
   publishYear: number
   location: string
+  file_url?: string
+  file_type?: 'pdf' | 'epub'
   createdAt: string
 }
 
@@ -22,7 +30,7 @@ export interface Checkout {
   checkoutDate: string
   dueDate: string
   returnDate?: string
-  status: "active" | "overdue" | "returned"
+  status: 'active' | 'overdue' | 'returned'
   createdAt: string
 }
 
@@ -32,167 +40,224 @@ export interface Reservation {
   studentId: string
   reservationDate: string
   expectedAvailableDate?: string
-  status: "pending" | "ready" | "cancelled"
+  status: 'pending' | 'ready' | 'cancelled'
   createdAt: string
 }
 
 export const libraryService = {
   // Book management
-  getAllBooks: (): Book[] => {
-    return storage.get<Book[]>(STORAGE_KEYS.LIBRARY_CATALOG) || []
-  },
+  getAllBooks: async (): Promise<Book[]> => {
+    const { data, error } = await supabase
+      .from('library_books')
+      .select('*')
+      .order('title', { ascending: true })
 
-  searchBooks: (query: string): Book[] => {
-    const books = libraryService.getAllBooks()
-    const lowerQuery = query.toLowerCase()
-    return books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(lowerQuery) ||
-        b.author.toLowerCase().includes(lowerQuery) ||
-        b.isbn.includes(query) ||
-        b.category.toLowerCase().includes(lowerQuery)
-    )
-  },
-
-  getBookById: (id: string): Book | null => {
-    const books = libraryService.getAllBooks()
-    return books.find((b) => b.id === id) || null
-  },
-
-  addBook: (book: Omit<Book, "id" | "createdAt">): Book => {
-    const books = libraryService.getAllBooks()
-    const newBook: Book = {
-      ...book,
-      id: `book_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching books:', error)
+      return []
     }
-    books.push(newBook)
-    storage.set(STORAGE_KEYS.LIBRARY_CATALOG, books)
-    return newBook
+    return data || []
   },
 
-  updateBook: (id: string, updates: Partial<Book>): Book | null => {
-    const books = libraryService.getAllBooks()
-    const book = books.find((b) => b.id === id)
-    if (!book) return null
+  searchBooks: async (query: string): Promise<Book[]> => {
+    const { data, error } = await supabase
+      .from('library_books')
+      .select('*')
+      .or(`title.ilike.%${query}%,author.ilike.%${query}%,isbn.ilike.%${query}%`)
 
-    Object.assign(book, updates)
-    storage.set(STORAGE_KEYS.LIBRARY_CATALOG, books)
-    return book
+    if (error) {
+      console.error('Error searching books:', error)
+      return []
+    }
+    return data || []
   },
 
-  deleteBook: (id: string): void => {
-    const books = libraryService.getAllBooks()
-    const filtered = books.filter((b) => b.id !== id)
-    storage.set(STORAGE_KEYS.LIBRARY_CATALOG, filtered)
+  getBookById: async (id: string): Promise<Book | null> => {
+    const { data, error } = await supabase
+      .from('library_books')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching book:', error)
+      return null
+    }
+    return data
+  },
+
+  addBook: async (book: Omit<Book, 'id' | 'createdAt'>, fileUrl?: string, fileType?: 'pdf' | 'epub'): Promise<Book | null> => {
+    const { data, error } = await supabase
+      .from('library_books')
+      .insert([
+        {
+          ...book,
+          file_url: fileUrl,
+          file_type: fileType,
+        },
+      ])
+      .select()
+
+    if (error) {
+      console.error('Error adding book:', error)
+      return null
+    }
+    return data?.[0] || null
+  },
+
+  updateBook: async (id: string, updates: Partial<Book>): Promise<Book | null> => {
+    const { data, error } = await supabase
+      .from('library_books')
+      .update(updates)
+      .eq('id', id)
+      .select()
+
+    if (error) {
+      console.error('Error updating book:', error)
+      return null
+    }
+    return data?.[0] || null
+  },
+
+  deleteBook: async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('library_books')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting book:', error)
+      return false
+    }
+    return true
   },
 
   // Checkout management
-  getStudentCheckouts: (studentId: string): Checkout[] => {
-    const checkouts = storage.get<Checkout[]>(STORAGE_KEYS.LIBRARY_CHECKOUTS) || []
-    return checkouts
-      .filter((c) => c.studentId === studentId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  getStudentCheckouts: async (studentId: string): Promise<Checkout[]> => {
+    const { data, error } = await supabase
+      .from('library_checkouts')
+      .select(`
+        *,
+        book:library_books(*)
+      `)
+      .eq('student_id', studentId)
+      .eq('status', 'active')
+      .order('due_date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching checkouts:', error)
+      return []
+    }
+    return data || []
   },
 
-  getAllCheckouts: (): Checkout[] => {
-    return storage.get<Checkout[]>(STORAGE_KEYS.LIBRARY_CHECKOUTS) || []
+  getAllCheckouts: async (): Promise<Checkout[]> => {
+    const { data, error } = await supabase
+      .from('library_checkouts')
+      .select(`
+        *,
+        book:library_books(*),
+        student:users(*)
+      `)
+      .order('checkout_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching all checkouts:', error)
+      return []
+    }
+    return data || []
   },
 
-  checkoutBook: (bookId: string, studentId: string, dueDays: number = 14): Checkout => {
-    const checkouts = storage.get<Checkout[]>(STORAGE_KEYS.LIBRARY_CHECKOUTS) || []
+  checkoutBook: async (bookId: string, studentId: string, dueDays: number = 14): Promise<Checkout | null> => {
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + dueDays)
 
-    const newCheckout: Checkout = {
-      id: `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      bookId,
-      studentId,
-      checkoutDate: new Date().toISOString().split("T")[0],
-      dueDate: dueDate.toISOString().split("T")[0],
-      status: "active",
-      createdAt: new Date().toISOString(),
+    const { data, error } = await supabase
+      .from('library_checkouts')
+      .insert([
+        {
+          book_id: bookId,
+          student_id: studentId,
+          checkout_date: new Date().toISOString(),
+          due_date: dueDate.toISOString(),
+          status: 'active',
+        },
+      ])
+      .select()
+
+    if (!error) {
+      const book = await libraryService.getBookById(bookId)
+      if (book && book.availableCopies > 0) {
+        await libraryService.updateBook(bookId, {
+          availableCopies: book.availableCopies - 1,
+        })
+      }
     }
 
-    checkouts.push(newCheckout)
-    storage.set(STORAGE_KEYS.LIBRARY_CHECKOUTS, checkouts)
+    if (error) {
+      console.error('Error checking out book:', error)
+      return null
+    }
+    return data?.[0] || null
+  },
 
-    // Update book available copies
-    const book = libraryService.getBookById(bookId)
-    if (book && book.availableCopies > 0) {
-      libraryService.updateBook(bookId, { availableCopies: book.availableCopies - 1 })
+  returnBook: async (checkoutId: string): Promise<Checkout | null> => {
+    const { data: checkout, error: checkoutError } = await supabase
+      .from('library_checkouts')
+      .select('*')
+      .eq('id', checkoutId)
+      .single()
+
+    if (checkoutError) {
+      console.error('Error fetching checkout:', checkoutError)
+      return null
     }
 
-    return newCheckout
-  },
+    const { data, error } = await supabase
+      .from('library_checkouts')
+      .update({
+        return_date: new Date().toISOString(),
+        status: 'returned',
+      })
+      .eq('id', checkoutId)
+      .select()
 
-  returnBook: (checkoutId: string): Checkout | null => {
-    const checkouts = storage.get<Checkout[]>(STORAGE_KEYS.LIBRARY_CHECKOUTS) || []
-    const checkout = checkouts.find((c) => c.id === checkoutId)
-    if (!checkout) return null
-
-    checkout.returnDate = new Date().toISOString().split("T")[0]
-    const today = new Date()
-    const dueDate = new Date(checkout.dueDate)
-    checkout.status = today > dueDate ? "overdue" : "returned"
-
-    storage.set(STORAGE_KEYS.LIBRARY_CHECKOUTS, checkouts)
-
-    // Update book available copies
-    const book = libraryService.getBookById(checkout.bookId)
-    if (book) {
-      libraryService.updateBook(checkout.bookId, { availableCopies: book.availableCopies + 1 })
+    if (!error) {
+      const book = await libraryService.getBookById(checkout.book_id)
+      if (book) {
+        await libraryService.updateBook(checkout.book_id, {
+          availableCopies: book.availableCopies + 1,
+        })
+      }
     }
 
-    return checkout
-  },
-
-  getOverdueBooks: (): Checkout[] => {
-    const checkouts = libraryService.getAllCheckouts()
-    const today = new Date()
-    return checkouts.filter((c) => {
-      const dueDate = new Date(c.dueDate)
-      return c.status === "active" && today > dueDate
-    })
-  },
-
-  // Reservation management
-  getStudentReservations: (studentId: string): Reservation[] => {
-    const reservations = storage.get<Reservation[]>(STORAGE_KEYS.LIBRARY_CHECKOUTS) || []
-    return reservations
-      .filter((r) => r.studentId === studentId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  },
-
-  reserveBook: (bookId: string, studentId: string): Reservation => {
-    // Store reservations in library checkouts for simplicity
-    const reservations = storage.get<Reservation[]>("library_reservations") || []
-
-    const newReservation: Reservation = {
-      id: `reserve_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      bookId,
-      studentId,
-      reservationDate: new Date().toISOString(),
-      status: "pending",
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error returning book:', error)
+      return null
     }
-
-    reservations.push(newReservation)
-    storage.set("library_reservations", reservations)
-    return newReservation
+    return data?.[0] || null
   },
 
-  cancelReservation: (reservationId: string): void => {
-    const reservations = storage.get<Reservation[]>("library_reservations") || []
-    const filtered = reservations.filter((r) => r.id !== reservationId)
-    storage.set("library_reservations", filtered)
+  getOverdueBooks: async (): Promise<Checkout[]> => {
+    const { data, error } = await supabase
+      .from('library_checkouts')
+      .select('*')
+      .eq('status', 'active')
+      .lt('due_date', new Date().toISOString())
+      .order('due_date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching overdue books:', error)
+      return []
+    }
+    return data || []
   },
 
-  getLibraryStats: () => {
-    const books = libraryService.getAllBooks()
-    const checkouts = libraryService.getAllCheckouts()
-    const activeCheckouts = checkouts.filter((c) => c.status === "active")
-    const overdueCheckouts = libraryService.getOverdueBooks()
+  getLibraryStats: async () => {
+    const books = await libraryService.getAllBooks()
+    const checkouts = await libraryService.getAllCheckouts()
+    const activeCheckouts = checkouts.filter((c) => c.status === 'active')
+    const overdueCheckouts = await libraryService.getOverdueBooks()
 
     return {
       totalBooks: books.length,

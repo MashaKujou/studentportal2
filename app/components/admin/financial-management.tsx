@@ -17,6 +17,8 @@ export function AdminFinancialManagement() {
   const [records, setRecords] = useState<FinancialRecord[]>(() => financialService.getAllFinancialRecords())
   const [filterStudentId, setFilterStudentId] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'unpaid' | 'partial' | 'overdue'>('all')
+  const [filterCourseStrand, setFilterCourseStrand] = useState('')
+  const [viewMode, setViewMode] = useState<'by-student' | 'by-course'>('by-student')
 
   // Form states
   const [studentId, setStudentId] = useState('')
@@ -84,10 +86,24 @@ export function AdminFinancialManagement() {
   }
 
   const filteredRecords = records.filter((r) => {
+    const student = getStudent(r.studentId)
     const matchStudent = !filterStudentId || r.studentId === filterStudentId
     const matchStatus = filterStatus === 'all' || r.status === filterStatus
-    return matchStudent && matchStatus
+    const matchCourse = !filterCourseStrand || student?.strand === filterCourseStrand || student?.program === filterCourseStrand
+    return matchStudent && matchStatus && matchCourse
   })
+
+  const groupedByCourse = filteredRecords.reduce((acc, record) => {
+    const student = getStudent(record.studentId)
+    const courseKey = student?.program || student?.strand || 'Other'
+    if (!acc[courseKey]) {
+      acc[courseKey] = []
+    }
+    acc[courseKey].push(record)
+    return acc
+  }, {} as Record<string, FinancialRecord[]>)
+
+  const uniqueCourseStrand = [...new Set(students.map(s => s.program || s.strand).filter(Boolean))]
 
   const getStudent = (studentId: string) => students.find((s) => s.id === studentId)
   const getStatusColor = (status: string) => {
@@ -287,7 +303,23 @@ export function AdminFinancialManagement() {
             <CardTitle>Filter Records</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex gap-2 mb-3">
+              <Button
+                variant={viewMode === 'by-student' ? 'default' : 'outline'}
+                onClick={() => setViewMode('by-student')}
+                size="sm"
+              >
+                By Student
+              </Button>
+              <Button
+                variant={viewMode === 'by-course' ? 'default' : 'outline'}
+                onClick={() => setViewMode('by-course')}
+                size="sm"
+              >
+                By Course/Strand
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Filter by Student</label>
                 <select
@@ -316,6 +348,22 @@ export function AdminFinancialManagement() {
                   <option value="unpaid">Unpaid</option>
                   <option value="partial">Partial</option>
                   <option value="overdue">Overdue</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Filter by Course/Strand</label>
+                <select
+                  value={filterCourseStrand}
+                  onChange={(e) => setFilterCourseStrand(e.target.value)}
+                  className="w-full border rounded-md p-2 text-sm"
+                >
+                  <option value="">All Courses/Strands</option>
+                  {uniqueCourseStrand.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

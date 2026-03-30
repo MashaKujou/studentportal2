@@ -24,11 +24,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
     { label: "Student Messages", href: "/admin/messages" },
     { label: "Financial Management", href: "/admin/financial" },
     { label: "Library Management", href: "/admin/library" },
-    { label: "Campus Resources", href: "/admin/campus-resources" },
     { label: "Notifications", href: "/admin/notifications" },
     { label: "Feedback", href: "/admin/feedback" },
     { label: "Analytics", href: "/admin/analytics" },
-    { label: "Advanced Analytics", href: "/admin/advanced-analytics" },
+    { label: "Archive Management", href: "/admin/archives" },
     { label: "Settings", href: "/admin/settings" },
   ]
 
