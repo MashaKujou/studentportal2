@@ -1,6 +1,11 @@
-import { STORAGE_KEYS } from "@/lib/constants"
-import { storage, userStorage } from "@/lib/storage"
-import { generateId } from "@/lib/helpers"
+'use server'
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export interface Grade {
   id: string
@@ -16,7 +21,7 @@ export interface Attendance {
   id: string
   studentId: string
   date: string
-  status: "present" | "absent" | "late" | "excused"
+  status: 'present' | 'absent' | 'late' | 'excused'
   subject: string
   createdAt: string
 }
@@ -25,7 +30,7 @@ export interface Request {
   id: string
   studentId: string
   type: string
-  status: "pending" | "approved" | "rejected" | "completed"
+  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'read' | 'in_progress'
   reason: string
   createdAt: string
   completedAt?: string
@@ -53,101 +58,118 @@ export interface Document {
 
 export const studentService = {
   // Grade operations
-  getGrades: (studentId: string): Grade[] => {
-    const grades = storage.get<Grade[]>(STORAGE_KEYS.GRADES) || []
-    return grades.filter((g) => g.studentId === studentId)
-  },
+  getGrades: async (studentId: string): Promise<Grade[]> => {
+    const { data, error } = await supabase
+      .from('grades')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false })
 
-  addGrade: (grade: Omit<Grade, "id" | "createdAt">): Grade => {
-    const newGrade: Grade = {
-      ...grade,
-      id: generateId("GRD"),
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching grades:', error)
+      return []
     }
-    const grades = storage.get<Grade[]>(STORAGE_KEYS.GRADES) || []
-    grades.push(newGrade)
-    storage.set(STORAGE_KEYS.GRADES, grades)
-    return newGrade
+    return data || []
   },
 
   // Attendance operations
-  getAttendance: (studentId: string): Attendance[] => {
-    const attendance = storage.get<Attendance[]>(STORAGE_KEYS.ATTENDANCE) || []
-    return attendance.filter((a) => a.studentId === studentId)
-  },
+  getAttendance: async (studentId: string): Promise<Attendance[]> => {
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('date', { ascending: false })
 
-  recordAttendance: (attendance: Omit<Attendance, "id" | "createdAt">): Attendance => {
-    const newAttendance: Attendance = {
-      ...attendance,
-      id: generateId("ATT"),
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching attendance:', error)
+      return []
     }
-    const allAttendance = storage.get<Attendance[]>(STORAGE_KEYS.ATTENDANCE) || []
-    allAttendance.push(newAttendance)
-    storage.set(STORAGE_KEYS.ATTENDANCE, allAttendance)
-    return newAttendance
+    return data || []
   },
 
   // Request operations
-  getRequests: (studentId: string): Request[] => {
-    return storage.get<Request[]>(`requests_${studentId}`) || []
-  },
+  getRequests: async (studentId: string): Promise<Request[]> => {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false })
 
-  createRequest: (request: Omit<Request, "id" | "createdAt">): Request => {
-    const newRequest: Request = {
-      ...request,
-      id: generateId("REQ"),
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching requests:', error)
+      return []
     }
-    const requests = storage.get<Request[]>(`requests_${request.studentId}`) || []
-    requests.push(newRequest)
-    storage.set(`requests_${request.studentId}`, requests)
-    return newRequest
+    return data || []
   },
 
-  getRequestHistory: (studentId: string) => {
-    return storage.get<any[]>(`requests_${studentId}`) || []
+  createRequest: async (request: Omit<Request, 'id' | 'createdAt'>): Promise<Request | null> => {
+    const { data, error } = await supabase
+      .from('requests')
+      .insert([request])
+      .select()
+
+    if (error) {
+      console.error('Error creating request:', error)
+      return null
+    }
+    return data?.[0] || null
   },
 
   // Schedule operations
-  getSchedule: (studentId: string): Schedule[] => {
-    const schedules = storage.get<Schedule[]>(STORAGE_KEYS.SCHEDULES) || []
-    return schedules.filter((s) => s.studentId === studentId)
-  },
+  getSchedule: async (studentId: string): Promise<Schedule[]> => {
+    const { data, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: true })
 
-  addSchedule: (schedule: Omit<Schedule, "id" | "createdAt">): Schedule => {
-    const newSchedule: Schedule = {
-      ...schedule,
-      id: generateId("SCH"),
-      createdAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching schedule:', error)
+      return []
     }
-    const schedules = storage.get<Schedule[]>(STORAGE_KEYS.SCHEDULES) || []
-    schedules.push(newSchedule)
-    storage.set(STORAGE_KEYS.SCHEDULES, schedules)
-    return newSchedule
+    return data || []
   },
 
   // Document operations
-  getDocuments: (studentId: string): Document[] => {
-    const documents = storage.get<Document[]>(STORAGE_KEYS.DOCUMENTS) || []
-    return documents.filter((d) => d.studentId === studentId)
-  },
+  getDocuments: async (studentId: string): Promise<Document[]> => {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('uploaded_at', { ascending: false })
 
-  uploadDocument: (document: Omit<Document, "id" | "uploadedAt">): Document => {
-    const newDocument: Document = {
-      ...document,
-      id: generateId("DOC"),
-      uploadedAt: new Date().toISOString(),
+    if (error) {
+      console.error('Error fetching documents:', error)
+      return []
     }
-    const documents = storage.get<Document[]>(STORAGE_KEYS.DOCUMENTS) || []
-    documents.push(newDocument)
-    storage.set(STORAGE_KEYS.DOCUMENTS, documents)
-    return newDocument
+    return data || []
   },
 
-  deleteDocument: (documentId: string, studentId: string): void => {
-    const documents = storage.get<Document[]>(STORAGE_KEYS.DOCUMENTS) || []
-    storage.set(
+  uploadDocument: async (document: Omit<Document, 'id' | 'uploadedAt'>): Promise<Document | null> => {
+    const { data, error } = await supabase
+      .from('documents')
+      .insert([document])
+      .select()
+
+    if (error) {
+      console.error('Error uploading document:', error)
+      return null
+    }
+    return data?.[0] || null
+  },
+
+  deleteDocument: async (documentId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId)
+
+    if (error) {
+      console.error('Error deleting document:', error)
+      return false
+    }
+    return true
+  },
       STORAGE_KEYS.DOCUMENTS,
       documents.filter((d) => !(d.id === documentId && d.studentId === studentId)),
     )

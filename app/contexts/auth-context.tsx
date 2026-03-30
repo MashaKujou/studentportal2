@@ -2,9 +2,14 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { type Student, type Teacher, type Admin, userStorage } from "@/lib/storage"
+import { createClient } from "@supabase/supabase-js"
 
-type User = (Student | Teacher | Admin) & { role: string }
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+type User = any & { role: string }
 
 interface AuthContextType {
   user: User | null
@@ -25,53 +30,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize auth on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("auth_user")
-    if (storedUser) {
+    const initAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser))
+        const storedUser = sessionStorage.getItem("auth_user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       } catch (error) {
         console.error("Failed to parse stored user:", error)
-        localStorage.removeItem("auth_user")
+        sessionStorage.removeItem("auth_user")
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
+    initAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Check all user types to find matching credentials
-      const students = userStorage.getStudents()
-      const student = students.find((s) => s.email === email && s.password === password)
+      // Check students table
+      const { data: students, error: studentError } = await supabase
+        .from("students")
+        .select("*")
+        .eq("email", email)
 
-      if (student) {
-        const authenticatedUser = { ...student, role: "student" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
+      if (!studentError && students && students.length > 0) {
+        const student = students[0]
+        // Note: In production, use proper password hashing (bcrypt)
+        if (student.password === password) {
+          const authenticatedUser = { ...student, role: "student" }
+          setUser(authenticatedUser as User)
+          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
+          return
+        }
       }
 
-      const teachers = userStorage.getTeachers()
-      const teacher = teachers.find((t) => t.email === email && t.password === password)
+      // Check teachers table
+      const { data: teachers, error: teacherError } = await supabase
+        .from("teachers")
+        .select("*")
+        .eq("email", email)
 
-      if (teacher) {
-        const authenticatedUser = { ...teacher, role: "teacher" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
+      if (!teacherError && teachers && teachers.length > 0) {
+        const teacher = teachers[0]
+        if (teacher.password === password) {
+          const authenticatedUser = { ...teacher, role: "teacher" }
+          setUser(authenticatedUser as User)
+          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
+          return
+        }
       }
 
-      const admins = userStorage.getAdmins()
-      const admin = admins.find((a) => a.email === email && a.password === password)
+      // Check admins table
+      const { data: admins, error: adminError } = await supabase
+        .from("admins")
+        .select("*")
+        .eq("email", email)
 
-      if (admin) {
-        const authenticatedUser = { ...admin, role: "admin" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
+      if (!adminError && admins && admins.length > 0) {
+        const admin = admins[0]
+        if (admin.password === password) {
+          const authenticatedUser = { ...admin, role: "admin" }
+          setUser(authenticatedUser as User)
+          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
+          return
+        }
       }
 
       throw new Error("Invalid email or password")
+    } catch (error) {
+      console.error("Login error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -79,29 +109,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem("auth_user")
+    sessionStorage.removeItem("auth_user")
   }
 
   const registerStudent = async (data: any) => {
     setIsLoading(true)
     try {
-      const newStudent: Student = {
-        id: `STU${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        studentId: data.studentId,
-        academicLevel: data.academicLevel,
-        grade: data.grade || undefined,
-        strand: data.strand || undefined,
-        year: data.year || undefined,
-        course: data.course || undefined,
-        status: "pending",
-        registeredAt: new Date().toISOString(),
-      }
+      const { error } = await supabase
+        .from("students")
+        .insert([
+          {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email: data.email,
+            password: data.password, // Note: Hash this in production
+            phone: data.phone || "",
+            date_of_birth: data.dateOfBirth || "",
+            gender: data.gender || "",
+            academic_level: data.academicLevel,
+            strand: data.strand || null,
+            program: data.program || null,
+            year: data.year || null,
+            status: "pending",
+          },
+        ])
 
-      userStorage.addStudent(newStudent)
+      if (error) throw error
+    } catch (error) {
+      console.error("Student registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -110,20 +146,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerTeacher = async (data: any) => {
     setIsLoading(true)
     try {
-      const newTeacher: Teacher = {
-        id: `TCH${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        teacherId: data.teacherId,
-        department: data.department,
-        subjects: data.subjects || [],
-        status: "active",
-        registeredAt: new Date().toISOString(),
-      }
+      const { error } = await supabase
+        .from("teachers")
+        .insert([
+          {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email: data.email,
+            password: data.password, // Note: Hash this in production
+            phone: data.phone || "",
+            department: data.department,
+            specialty: data.specialty || "",
+            status: "active",
+          },
+        ])
 
-      userStorage.addTeacher(newTeacher)
+      if (error) throw error
+    } catch (error) {
+      console.error("Teacher registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -132,19 +173,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerAdmin = async (data: any) => {
     setIsLoading(true)
     try {
-      const newAdmin: Admin = {
-        id: `ADM${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "admin",
-        permissions: ["all"],
-        status: "active",
-        registeredAt: new Date().toISOString(),
-      }
+      const { error } = await supabase
+        .from("admins")
+        .insert([
+          {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email: data.email,
+            password: data.password, // Note: Hash this in production
+            role: "admin",
+            status: "active",
+          },
+        ])
 
-      userStorage.addAdmin(newAdmin)
+      if (error) throw error
+    } catch (error) {
+      console.error("Admin registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
