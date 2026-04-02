@@ -49,36 +49,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      console.log("[v0] Login attempt for:", email)
-      
-      // Query the users table with join to get role and related data
-      const { data: userData, error: userError } = await supabase
+      // Query the users table to find the user by email
+      const { data: usersData, error: usersError } = await supabase
         .from("users")
-        .select(`
-          *,
-          students(*),
-          teachers(*),
-          admins(*)
-        `)
+        .select("*")
         .eq("email", email)
-        .single()
 
-      console.log("[v0] User query result:", { userData, userError })
-
-      if (userError || !userData) {
-        console.log("[v0] User not found:", userError?.message)
+      if (usersError || !usersData || usersData.length === 0) {
         throw new Error("Invalid email or password")
       }
+
+      const userData = usersData[0]
 
       // Check password
       if (userData.password_hash !== password) {
-        console.log("[v0] Password mismatch for:", email)
         throw new Error("Invalid email or password")
       }
 
-      console.log("[v0] Login successful for:", email, "Role:", userData.role)
+      // Fetch role-specific data based on role
+      let roleData = null
+      if (userData.role === "student") {
+        const { data: studentData } = await supabase
+          .from("students")
+          .select("*")
+          .eq("user_id", userData.id)
+          .single()
+        roleData = studentData
+      } else if (userData.role === "teacher") {
+        const { data: teacherData } = await supabase
+          .from("teachers")
+          .select("*")
+          .eq("user_id", userData.id)
+          .single()
+        roleData = teacherData
+      } else if (userData.role === "admin") {
+        const { data: adminData } = await supabase
+          .from("admins")
+          .select("*")
+          .eq("user_id", userData.id)
+          .single()
+        roleData = adminData
+      }
 
-      // Build authenticated user object with all related data
+      // Build authenticated user object
       const authenticatedUser = {
         id: userData.id,
         email: userData.email,
@@ -86,16 +99,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: userData.role,
         status: userData.status,
         profilePictureUrl: userData.profile_picture_url,
-        ...(userData.students?.[0] && { student: userData.students[0] }),
-        ...(userData.teachers?.[0] && { teacher: userData.teachers[0] }),
-        ...(userData.admins?.[0] && { admin: userData.admins[0] }),
+        ...(roleData && { roleData }),
       }
 
       setUser(authenticatedUser as User)
       sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
       return
     } catch (error) {
-      console.error("[v0] Login error:", error)
+      console.error("Login error:", error)
       throw error
     } finally {
       setIsLoading(false)
