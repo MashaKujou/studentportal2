@@ -4,9 +4,16 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
 
+// Use anon key for normal operations
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// Use service role key for login (bypasses RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 type User = any & { role: string }
@@ -49,46 +56,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Query the users table to find the user by email
-      const { data: usersData, error: usersError } = await supabase
+      console.log("[v0] Login attempt for:", email)
+      
+      // Use service role to bypass RLS during login
+      const { data: usersData, error: usersError } = await supabaseAdmin
         .from("users")
         .select("*")
         .eq("email", email)
 
+      console.log("[v0] Users query result:", { found: usersData?.length, error: usersError?.message })
+
       if (usersError || !usersData || usersData.length === 0) {
+        console.log("[v0] User not found")
         throw new Error("Invalid email or password")
       }
 
       const userData = usersData[0]
+      console.log("[v0] User data retrieved, checking password")
 
       // Check password
       if (userData.password_hash !== password) {
+        console.log("[v0] Password does not match")
         throw new Error("Invalid email or password")
       }
+
+      console.log("[v0] Password verified, fetching role data")
 
       // Fetch role-specific data based on role
       let roleData = null
       if (userData.role === "student") {
-        const { data: studentData } = await supabase
+        const { data: studentData, error: studentError } = await supabaseAdmin
           .from("students")
           .select("*")
           .eq("user_id", userData.id)
           .single()
         roleData = studentData
+        if (studentError) console.log("[v0] Student data error:", studentError.message)
       } else if (userData.role === "teacher") {
-        const { data: teacherData } = await supabase
+        const { data: teacherData, error: teacherError } = await supabaseAdmin
           .from("teachers")
           .select("*")
           .eq("user_id", userData.id)
           .single()
         roleData = teacherData
+        if (teacherError) console.log("[v0] Teacher data error:", teacherError.message)
       } else if (userData.role === "admin") {
-        const { data: adminData } = await supabase
+        const { data: adminData, error: adminError } = await supabaseAdmin
           .from("admins")
           .select("*")
           .eq("user_id", userData.id)
           .single()
         roleData = adminData
+        if (adminError) console.log("[v0] Admin data error:", adminError.message)
       }
 
       // Build authenticated user object
@@ -102,11 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...(roleData && { roleData }),
       }
 
+      console.log("[v0] Login successful for:", email, "Role:", userData.role)
       setUser(authenticatedUser as User)
       sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
       return
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("[v0] Login error:", error)
       throw error
     } finally {
       setIsLoading(false)
