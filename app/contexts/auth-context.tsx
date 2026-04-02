@@ -49,58 +49,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Check students table
-      const { data: students, error: studentError } = await supabase
-        .from("students")
-        .select("*")
+      console.log("[v0] Login attempt for:", email)
+      
+      // Query the users table with join to get role and related data
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select(`
+          *,
+          students(*),
+          teachers(*),
+          admins(*)
+        `)
         .eq("email", email)
+        .single()
 
-      if (!studentError && students && students.length > 0) {
-        const student = students[0]
-        // Note: In production, use proper password hashing (bcrypt)
-        if (student.password === password) {
-          const authenticatedUser = { ...student, role: "student" }
-          setUser(authenticatedUser as User)
-          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-          return
-        }
+      console.log("[v0] User query result:", { userData, userError })
+
+      if (userError || !userData) {
+        console.log("[v0] User not found:", userError?.message)
+        throw new Error("Invalid email or password")
       }
 
-      // Check teachers table
-      const { data: teachers, error: teacherError } = await supabase
-        .from("teachers")
-        .select("*")
-        .eq("email", email)
-
-      if (!teacherError && teachers && teachers.length > 0) {
-        const teacher = teachers[0]
-        if (teacher.password === password) {
-          const authenticatedUser = { ...teacher, role: "teacher" }
-          setUser(authenticatedUser as User)
-          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-          return
-        }
+      // Check password
+      if (userData.password_hash !== password) {
+        console.log("[v0] Password mismatch for:", email)
+        throw new Error("Invalid email or password")
       }
 
-      // Check admins table
-      const { data: admins, error: adminError } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("email", email)
+      console.log("[v0] Login successful for:", email, "Role:", userData.role)
 
-      if (!adminError && admins && admins.length > 0) {
-        const admin = admins[0]
-        if (admin.password === password) {
-          const authenticatedUser = { ...admin, role: "admin" }
-          setUser(authenticatedUser as User)
-          sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-          return
-        }
+      // Build authenticated user object with all related data
+      const authenticatedUser = {
+        id: userData.id,
+        email: userData.email,
+        fullName: userData.full_name,
+        role: userData.role,
+        status: userData.status,
+        profilePictureUrl: userData.profile_picture_url,
+        ...(userData.students?.[0] && { student: userData.students[0] }),
+        ...(userData.teachers?.[0] && { teacher: userData.teachers[0] }),
+        ...(userData.admins?.[0] && { admin: userData.admins[0] }),
       }
 
-      throw new Error("Invalid email or password")
+      setUser(authenticatedUser as User)
+      sessionStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
+      return
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("[v0] Login error:", error)
       throw error
     } finally {
       setIsLoading(false)
@@ -115,26 +110,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerStudent = async (data: any) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: data.email,
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
+            role: "student",
+            status: "active",
+          },
+        ])
+        .select()
+
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create student record
+      const { error: studentError } = await supabase
         .from("students")
         .insert([
           {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            email: data.email,
-            password: data.password, // Note: Hash this in production
-            phone: data.phone || "",
-            date_of_birth: data.dateOfBirth || "",
-            gender: data.gender || "",
+            user_id: userId,
             academic_level: data.academicLevel,
             strand: data.strand || null,
             program: data.program || null,
             year: data.year || null,
-            status: "pending",
+            enrollment_status: "pending",
           },
         ])
 
-      if (error) throw error
+      if (studentError) throw studentError
     } catch (error) {
       console.error("Student registration error:", error)
       throw error
@@ -146,22 +155,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerTeacher = async (data: any) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase
-        .from("teachers")
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
         .insert([
           {
-            first_name: data.firstName,
-            last_name: data.lastName,
             email: data.email,
-            password: data.password, // Note: Hash this in production
-            phone: data.phone || "",
-            department: data.department,
-            specialty: data.specialty || "",
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
+            role: "teacher",
             status: "active",
           },
         ])
+        .select()
 
-      if (error) throw error
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create teacher record
+      const { error: teacherError } = await supabase
+        .from("teachers")
+        .insert([
+          {
+            user_id: userId,
+            department: data.department,
+            specialization: data.specialty || null,
+          },
+        ])
+
+      if (teacherError) throw teacherError
     } catch (error) {
       console.error("Teacher registration error:", error)
       throw error
@@ -173,20 +197,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerAdmin = async (data: any) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase
-        .from("admins")
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
         .insert([
           {
-            first_name: data.firstName,
-            last_name: data.lastName,
             email: data.email,
-            password: data.password, // Note: Hash this in production
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
             role: "admin",
             status: "active",
           },
         ])
+        .select()
 
-      if (error) throw error
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create admin record
+      const { error: adminError } = await supabase
+        .from("admins")
+        .insert([
+          {
+            user_id: userId,
+            permission_level: "full_access",
+          },
+        ])
+
+      if (adminError) throw adminError
     } catch (error) {
       console.error("Admin registration error:", error)
       throw error
