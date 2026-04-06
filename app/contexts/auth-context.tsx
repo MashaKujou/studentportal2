@@ -2,9 +2,16 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { type Student, type Teacher, type Admin, userStorage } from "@/lib/storage"
+import { createClient } from "@supabase/supabase-js"
+import { loginUser } from "@/app/actions/auth-actions"
 
-type User = (Student | Teacher | Admin) & { role: string }
+// Use anon key for normal operations
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+type User = any & { role: string }
 
 interface AuthContextType {
   user: User | null
@@ -25,53 +32,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize auth on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("auth_user")
-    if (storedUser) {
+    const initAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser))
+        const storedUser = sessionStorage.getItem("auth_user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       } catch (error) {
         console.error("Failed to parse stored user:", error)
-        localStorage.removeItem("auth_user")
+        sessionStorage.removeItem("auth_user")
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
+    initAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Check all user types to find matching credentials
-      const students = userStorage.getStudents()
-      const student = students.find((s) => s.email === email && s.password === password)
+      // Call server action for secure login
+      const result = await loginUser(email, password)
 
-      if (student) {
-        const authenticatedUser = { ...student, role: "student" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
+      if (!result.success) {
+        throw new Error(result.error || "Login failed")
       }
 
-      const teachers = userStorage.getTeachers()
-      const teacher = teachers.find((t) => t.email === email && t.password === password)
-
-      if (teacher) {
-        const authenticatedUser = { ...teacher, role: "teacher" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
-      }
-
-      const admins = userStorage.getAdmins()
-      const admin = admins.find((a) => a.email === email && a.password === password)
-
-      if (admin) {
-        const authenticatedUser = { ...admin, role: "admin" }
-        setUser(authenticatedUser as User)
-        localStorage.setItem("auth_user", JSON.stringify(authenticatedUser))
-        return
-      }
-
-      throw new Error("Invalid email or password")
+      setUser(result.user as User)
+      sessionStorage.setItem("auth_user", JSON.stringify(result.user))
+      return
+    } catch (error) {
+      console.error("Login error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -79,29 +71,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem("auth_user")
+    sessionStorage.removeItem("auth_user")
   }
 
   const registerStudent = async (data: any) => {
     setIsLoading(true)
     try {
-      const newStudent: Student = {
-        id: `STU${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        studentId: data.studentId,
-        academicLevel: data.academicLevel,
-        grade: data.grade || undefined,
-        strand: data.strand || undefined,
-        year: data.year || undefined,
-        course: data.course || undefined,
-        status: "pending",
-        registeredAt: new Date().toISOString(),
-      }
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: data.email,
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
+            role: "student",
+            status: "active",
+          },
+        ])
+        .select()
 
-      userStorage.addStudent(newStudent)
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create student record
+      const { error: studentError } = await supabase
+        .from("students")
+        .insert([
+          {
+            user_id: userId,
+            academic_level: data.academicLevel,
+            strand: data.strand || null,
+            program: data.program || null,
+            year: data.year || null,
+            enrollment_status: "pending",
+          },
+        ])
+
+      if (studentError) throw studentError
+    } catch (error) {
+      console.error("Student registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -110,20 +122,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerTeacher = async (data: any) => {
     setIsLoading(true)
     try {
-      const newTeacher: Teacher = {
-        id: `TCH${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        teacherId: data.teacherId,
-        department: data.department,
-        subjects: data.subjects || [],
-        status: "active",
-        registeredAt: new Date().toISOString(),
-      }
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: data.email,
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
+            role: "teacher",
+            status: "active",
+          },
+        ])
+        .select()
 
-      userStorage.addTeacher(newTeacher)
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create teacher record
+      const { error: teacherError } = await supabase
+        .from("teachers")
+        .insert([
+          {
+            user_id: userId,
+            department: data.department,
+            specialization: data.specialty || null,
+          },
+        ])
+
+      if (teacherError) throw teacherError
+    } catch (error) {
+      console.error("Teacher registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -132,19 +164,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerAdmin = async (data: any) => {
     setIsLoading(true)
     try {
-      const newAdmin: Admin = {
-        id: `ADM${Date.now()}`,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "admin",
-        permissions: ["all"],
-        status: "active",
-        registeredAt: new Date().toISOString(),
-      }
+      // First create user in users table
+      const { data: newUser, error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: data.email,
+            password_hash: data.password,
+            full_name: `${data.firstName} ${data.lastName}`,
+            role: "admin",
+            status: "active",
+          },
+        ])
+        .select()
 
-      userStorage.addAdmin(newAdmin)
+      if (userError) throw userError
+
+      const userId = newUser?.[0]?.id
+      if (!userId) throw new Error("Failed to create user")
+
+      // Then create admin record
+      const { error: adminError } = await supabase
+        .from("admins")
+        .insert([
+          {
+            user_id: userId,
+            permission_level: "full_access",
+          },
+        ])
+
+      if (adminError) throw adminError
+    } catch (error) {
+      console.error("Admin registration error:", error)
+      throw error
     } finally {
       setIsLoading(false)
     }
