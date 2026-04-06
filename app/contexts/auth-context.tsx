@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
+import { userStorage } from "@/lib/storage"
 
 // Use anon key for normal operations
 const supabase = createClient(
@@ -50,9 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Import storage utilities
-      const { userStorage } = await import("@/lib/storage")
-
       // Try to find user in different roles
       const admins = userStorage.getAdmins()
       const teachers = userStorage.getTeachers()
