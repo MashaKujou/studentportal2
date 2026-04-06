@@ -8,7 +8,6 @@ import { useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 import { REQUEST_TYPES_COLLEGE } from "@/lib/constants"
 import { Download, FileText } from 'lucide-react'
-import { studentService } from "@/app/services/student-service"
 
 const statusMessages: { [key: string]: string } = {
   pending: "Your Request is still Pending",
@@ -41,31 +40,9 @@ export const RequestManagement = () => {
   }, [])
 
   const allDocuments = useMemo(() => {
-    const students = userStorage.getStudents()
-    let docs: any[] = []
-    
-    students.forEach(student => {
-      const studentDocs = studentService.getDocuments(student.id)
-      studentDocs.forEach((doc: any) => {
-        docs.push({
-          ...doc,
-          studentName: `${student.firstName} ${student.lastName}`,
-          studentEmail: student.email,
-          academicLevel: student.academicLevel,
-          course: student.course || student.strand,
-          year: student.year || student.grade
-        })
-      })
-    })
-
-    if (documentTypeFilter !== "all") {
-      docs = docs.filter(doc => doc.type === documentTypeFilter)
-    }
-    if (academicLevelFilter !== "all") {
-      docs = docs.filter(doc => doc.academicLevel === academicLevelFilter)
-    }
-
-    return docs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    // For now, return empty array as document storage is not implemented in localStorage
+    // Documents would be stored and retrieved from localStorage in a production implementation
+    return []
   }, [refreshKey, documentTypeFilter, academicLevelFilter])
 
   const documentTypes = ["Transcript", "Certificate", "Transfer Certificate", "Leave Letter", "Identity Card Photo", "Admission Letter"]
