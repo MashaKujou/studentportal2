@@ -3,7 +3,6 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { loginUser } from "@/app/actions/auth-actions"
 
 // Use anon key for normal operations
 const supabase = createClient(
@@ -51,16 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Call server action for secure login
-      const result = await loginUser(email, password)
-
-      if (!result.success) {
-        throw new Error(result.error || "Login failed")
-      }
-
-      setUser(result.user as User)
-      sessionStorage.setItem("auth_user", JSON.stringify(result.user))
-      return
+      throw new Error("Login not yet implemented")
     } catch (error) {
       console.error("Login error:", error)
       throw error

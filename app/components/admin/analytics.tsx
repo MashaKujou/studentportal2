@@ -4,18 +4,23 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { analyticsService } from '@/app/services/analytics-service'
 import { Users, BookOpen, MessageSquare, TrendingUp, DollarSign, Award, PieChart } from 'lucide-react'
 
 export const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState('overview')
 
-  const stats = analyticsService.getSystemAnalytics()
-  const studentAnalytics = analyticsService.getStudentAnalytics()
-  const financialAnalytics = analyticsService.getFinancialAnalytics()
-  const libraryAnalytics = analyticsService.getLibraryAnalytics()
-  const feedbackAnalytics = analyticsService.getFeedbackAnalytics()
-  const attendanceAnalytics = analyticsService.getAttendanceAnalytics()
+  // Placeholder data - analytics service removed
+  const stats = {
+    totalStudents: 0,
+    approvedStudents: 0,
+    pendingStudents: 0,
+    totalTeachers: 0,
+  }
+  const studentAnalytics = {}
+  const financialAnalytics = {}
+  const libraryAnalytics = {}
+  const feedbackAnalytics = {}
+  const attendanceAnalytics = {}
 
   return (
     <div className="space-y-6">
