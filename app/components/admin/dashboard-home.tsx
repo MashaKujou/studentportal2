@@ -2,13 +2,26 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { adminService } from "@/app/services/admin-service"
+import { userStorage, classStorage, subjectStorage } from "@/lib/storage"
 import { useMemo } from "react"
 import Link from "next/link"
 
 export const AdminDashboardHome = () => {
   const stats = useMemo(() => {
-    return adminService.getSystemStatistics()
+    const students = userStorage.getStudents()
+    const teachers = userStorage.getTeachers()
+    const classes = classStorage.getAllClasses()
+    const subjects = subjectStorage.getAllSubjects()
+
+    return {
+      totalStudents: students.length,
+      approvedStudents: students.filter((s: any) => s.status === "approved").length,
+      pendingStudents: students.filter((s: any) => s.status === "pending").length,
+      totalTeachers: teachers.length,
+      activeTeachers: teachers.filter((t: any) => t.status === "active").length,
+      totalClasses: classes.length,
+      totalSubjects: subjects.length,
+    }
   }, [])
 
   return (
