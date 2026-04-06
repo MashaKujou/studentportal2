@@ -32,7 +32,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
   ]
 
   return (
-    <ProtectedRoute allowedRoles={["admin"]}>
+    <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
       <Navbar title={`Admin - ${user?.firstName}`} />
       <div className="flex min-h-screen bg-background">
         <Sidebar items={sidebarItems} />
