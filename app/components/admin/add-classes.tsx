@@ -299,7 +299,12 @@ export const AddClasses = () => {
                     value={subjectCode}
                     onChange={(e) => setSubjectCode(e.target.value.toUpperCase())}
                   />
-                  <Button onClick={handleSearchSubject}>Search</Button>
+                  <Button 
+                    onClick={handleSearchSubject}
+                    className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+                  >
+                    Search
+                  </Button>
                 </div>
               </div>
 
@@ -366,9 +371,12 @@ export const AddClasses = () => {
                     </div>
                   </div>
 
-                  <Button onClick={handleAddClass} className="w-full bg-green-600 hover:bg-green-700">
-                    Create Class
-                  </Button>
+                <Button 
+                  onClick={handleAddClass} 
+                  className="w-full h-11 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
+                >
+                  Create Class Section
+                </Button>
                 </>
               )}
             </CardContent>
@@ -456,10 +464,9 @@ export const AddClasses = () => {
                         </p>
                       </div>
                       <Button 
-                        variant="outline" 
-                        size="sm"
                         onClick={handleViewBulkStudents}
                         disabled={matchingStudents.length === 0}
+                        className="h-9 px-4 font-medium bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         View Students
                       </Button>
@@ -491,7 +498,7 @@ export const AddClasses = () => {
                   <Button
                     onClick={handleBulkEnroll}
                     disabled={matchingStudents.length === 0}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full h-11 font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
                     Enroll All {matchingStudents.length} Students
                   </Button>
@@ -542,10 +549,9 @@ export const AddClasses = () => {
                                 }
                               </p>
                               <Button 
-                                size="sm" 
-                                variant="outline"
                                 onClick={() => handleViewStudents(cls)}
                                 disabled={studentCount === 0}
+                                className="h-8 px-3 text-xs font-medium bg-accent/10 hover:bg-accent/20 text-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               >
                                 View Students
                               </Button>
@@ -624,9 +630,7 @@ export const AddClasses = () => {
 
                   {(academicLevelFilter || yearFilter) && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 w-full"
+                      className="mt-3 w-full h-9 font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => {
                         setAcademicLevelFilter("")
                         setYearFilter("")
@@ -644,9 +648,13 @@ export const AddClasses = () => {
                   value={attendanceSearchId}
                   onChange={(e) => setAttendanceSearchId(e.target.value)}
                 />
-                <Button onClick={handleSearchAttendance}>Search</Button>
                 <Button 
-                  variant="outline" 
+                  onClick={handleSearchAttendance}
+                  className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+                >
+                  Search
+                </Button>
+                <Button 
                   onClick={() => {
                     setAttendanceSearchId("")
                     setAttendanceRecords([])
@@ -656,6 +664,7 @@ export const AddClasses = () => {
                     setAcademicLevelFilter("")
                     setYearFilter("")
                   }}
+                  className="h-10 px-6 font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
                 >
                   Clear
                 </Button>
