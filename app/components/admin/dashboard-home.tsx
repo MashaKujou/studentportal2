@@ -11,8 +11,8 @@ export const AdminDashboardHome = () => {
     const students = userStorage.getStudents()
     const teachers = userStorage.getTeachers()
     const admins = userStorage.getAdmins()
-    const classes = classesStorage.getAllClasses()
-    const subjects = subjectStorage.getAllSubjects()
+    const classes = classesStorage.getAll()
+    const subjects = subjectStorage.getAll()
 
     return {
       totalStudents: students.length,

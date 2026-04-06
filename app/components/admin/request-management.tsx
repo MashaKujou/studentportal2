@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { adminService } from "@/app/services/admin-service"
 import { userStorage } from "@/lib/storage"
 import { useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
@@ -32,7 +31,9 @@ export const RequestManagement = () => {
   const [academicLevelFilter, setAcademicLevelFilter] = useState("all")
 
   const requests = useMemo(() => {
-    return adminService.getAllRequests().filter((r) => r.status === filterStatus)
+    // Placeholder for requests - since we're using localStorage only
+    // Return empty array or implement localStorage-based request storage
+    return []
   }, [filterStatus, refreshKey])
 
   const students = useMemo(() => {
@@ -70,37 +71,28 @@ export const RequestManagement = () => {
   const documentTypes = ["Transcript", "Certificate", "Transfer Certificate", "Leave Letter", "Identity Card Photo", "Admission Letter"]
 
   const handleSelectRequest = (req: any) => {
-    if (req.status === "pending") {
-      adminService.updateRequestStatus(req.id, req.studentId, "read")
-    }
+    // Placeholder implementation - requests not implemented yet
     setSelectedRequest(req)
     setRefreshKey((k) => k + 1)
   }
 
   const handleReply = () => {
-    if (selectedRequest && replyMessage) {
-      adminService.addRequestMessage(selectedRequest.id, selectedRequest.studentId, replyMessage, "admin")
-      setReplyMessage("")
-      setRefreshKey((k) => k + 1)
-    }
+    // Placeholder implementation - requests not implemented yet
+    setReplyMessage("")
   }
 
   const handleStatusChange = (newStatus: string) => {
-    if (selectedRequest) {
-      adminService.updateRequestStatus(selectedRequest.id, selectedRequest.studentId, newStatus)
-      setRefreshKey((k) => k + 1)
-      setSelectedRequest(null)
-    }
+    // Placeholder implementation - requests not implemented yet
+    setRefreshKey((k) => k + 1)
+    setSelectedRequest(null)
   }
 
   const handleAddRequest = () => {
-    if (selectedStudent && newRequestType) {
-      adminService.createRequest(selectedStudent, newRequestType)
-      setNewRequestType("")
-      setSelectedStudent("")
-      setShowAddRequest(false)
-      setRefreshKey((k) => k + 1)
-    }
+    // Placeholder implementation - requests not implemented yet
+    setNewRequestType("")
+    setSelectedStudent("")
+    setShowAddRequest(false)
+    setRefreshKey((k) => k + 1)
   }
 
   return (
@@ -363,7 +355,7 @@ export const RequestManagement = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Messages:</p>
                     <div className="bg-muted p-3 rounded max-h-32 overflow-y-auto text-xs space-y-2">
-                      {adminService.getRequestMessages(selectedRequest.id).map((msg: any) => (
+                      {[].map((msg: any) => (
                         <div key={msg.id}>
                           <p className="font-semibold capitalize">{msg.senderRole}:</p>
                           <p>{msg.message}</p>

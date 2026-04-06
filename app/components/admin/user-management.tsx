@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { adminService } from "@/app/services/admin-service"
 import { userStorage, type Student, type Teacher } from "@/lib/storage"
 import { useMemo, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -28,18 +27,18 @@ export const UserManagement = () => {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const students = useMemo(() => {
-    const all = adminService.getAllStudents()
+    const all = userStorage.getStudents()
     return all.filter(
-      (s) =>
+      (s: any) =>
         s.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.email.toLowerCase().includes(searchQuery.toLowerCase()),
     )
   }, [searchQuery, refreshKey])
 
   const teachers = useMemo(() => {
-    const all = adminService.getAllTeachers()
+    const all = userStorage.getTeachers()
     return all.filter(
-      (t) =>
+      (t: any) =>
         t.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.email.toLowerCase().includes(searchQuery.toLowerCase()),
     )
@@ -84,8 +83,14 @@ export const UserManagement = () => {
 
   const handleDeleteUser = (userId: string, type: "student" | "teacher") => {
     if (confirm("Are you sure you want to delete this account? This action cannot be undone.")) {
-      adminService.deleteUser(userId, type)
-      refreshAndExport() // Use new function
+      if (type === "student") {
+        const students = userStorage.getStudents()
+        userStorage.saveStudents(students.filter((s: any) => s.id !== userId))
+      } else {
+        const teachers = userStorage.getTeachers()
+        userStorage.saveTeachers(teachers.filter((t: any) => t.id !== userId))
+      }
+      refreshAndExport()
     }
   }
 
