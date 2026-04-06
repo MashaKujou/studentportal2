@@ -222,7 +222,11 @@ export const TeacherGradeInput = () => {
                   </tbody>
                 </table>
               </div>
-              <Button onClick={handleSubmitGrades} disabled={isSubmitting} className="w-full">
+              <Button 
+                onClick={handleSubmitGrades} 
+                disabled={isSubmitting} 
+                className="w-full h-11 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {isSubmitting ? "Submitting..." : "Submit Grades for Admin Approval"}
               </Button>
             </div>

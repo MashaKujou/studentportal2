@@ -127,7 +127,11 @@ export const StudentRequests = () => {
               />
             </div>
 
-            <Button onClick={handleSubmitRequest} disabled={isSubmitting || !requestType || !reason}>
+            <Button 
+              onClick={handleSubmitRequest} 
+              disabled={isSubmitting || !requestType || !reason}
+              className="w-full h-10 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {isSubmitting ? "Submitting..." : "Submit Request"}
             </Button>
           </div>

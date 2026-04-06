@@ -68,15 +68,17 @@ export const PendingRegistrations = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3 pt-3">
                     <Button
-                      size="sm"
                       onClick={() => handleApprove(student.id)}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="flex-1 h-9 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
                     >
                       Approve
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleReject(student.id)}>
+                    <Button 
+                      onClick={() => handleReject(student.id)}
+                      className="flex-1 h-9 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all duration-200"
+                    >
                       Reject
                     </Button>
                   </div>
