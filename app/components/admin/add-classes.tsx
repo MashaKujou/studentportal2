@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { adminService } from "@/app/services/admin-service"
 import { userStorage, subjectStorage } from "@/lib/storage"
+import { SubjectManagement } from "@/app/components/admin/subject-management"
 import { useMemo, useState } from "react"
 import {
   ACADEMIC_LEVELS,
@@ -490,78 +491,7 @@ export const AddClasses = () => {
         </TabsContent>
 
         <TabsContent value="manage-subjects">
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Subject</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  placeholder="Subject Code (e.g., CS101)"
-                  value={newCode}
-                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                />
-                <Input placeholder="Subject Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-                <Input
-                  placeholder="Time (e.g., 8:00 AM - 9:30 AM)"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                />
-                <select
-                  value={newDay}
-                  onChange={(e) => setNewDay(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Day</option>
-                  {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-                <Input
-                  placeholder="Units/Credits"
-                  type="number"
-                  value={newUnit}
-                  onChange={(e) => setNewUnit(e.target.value)}
-                />
-                <Button onClick={handleCreateSubject} className="w-full">
-                  Create Subject
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Subject List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {subjects.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No subjects created yet</p>
-                ) : (
-                  <div className="space-y-2">
-                    {subjects.map((subject) => (
-                      <div
-                        key={subject.id}
-                        className="p-3 border rounded flex items-start justify-between hover:bg-muted"
-                      >
-                        <div className="flex-1">
-                          <p className="font-semibold">{subject.code}</p>
-                          <p className="text-sm text-muted-foreground">{subject.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {subject.day} • {subject.time}
-                          </p>
-                        </div>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteSubject(subject.id)}>
-                          Delete
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <SubjectManagement />
         </TabsContent>
 
         <TabsContent value="view-classes">
