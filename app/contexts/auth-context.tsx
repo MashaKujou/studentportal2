@@ -15,7 +15,7 @@ type User = any & { role: string }
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
   logout: () => void
   registerStudent: (data: any) => Promise<void>
   registerTeacher: (data: any) => Promise<void>
@@ -50,7 +50,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      throw new Error("Login not yet implemented")
+      // Import storage utilities
+      const { userStorage } = await import("@/lib/storage")
+
+      // Try to find user in different roles
+      const admins = userStorage.getAdmins()
+      const teachers = userStorage.getTeachers()
+      const students = userStorage.getStudents()
+
+      let foundUser: any = null
+      let role: string | null = null
+
+      // Check admins
+      const admin = admins.find((a: any) => a.email === email && a.password === password)
+      if (admin) {
+        foundUser = admin
+        role = admin.role || "admin"
+      }
+
+      // Check teachers
+      if (!foundUser) {
+        const teacher = teachers.find((t: any) => t.email === email && t.password === password)
+        if (teacher) {
+          foundUser = teacher
+          role = "teacher"
+        }
+      }
+
+      // Check students
+      if (!foundUser) {
+        const student = students.find((s: any) => s.email === email && s.password === password)
+        if (student) {
+          foundUser = student
+          role = "student"
+        }
+      }
+
+      if (!foundUser) {
+        throw new Error("Invalid email or password")
+      }
+
+      // Store user with role in sessionStorage
+      const userToStore = {
+        ...foundUser,
+        role: role,
+      }
+
+      sessionStorage.setItem("auth_user", JSON.stringify(userToStore))
+      setUser(userToStore)
+      
+      return userToStore
     } catch (error) {
       console.error("Login error:", error)
       throw error

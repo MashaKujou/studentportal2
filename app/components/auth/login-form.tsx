@@ -35,10 +35,16 @@ export const LoginForm = () => {
 
     setIsLoading(true)
     try {
-      await login(email, password)
+      const user = await login(email, password)
 
-      // For now, redirect to student dashboard - role detection will happen via auth context
-      router.push("/student/dashboard")
+      // Redirect based on user role
+      if (user.role === "super_admin" || user.role === "admin") {
+        router.push("/admin/dashboard")
+      } else if (user.role === "teacher") {
+        router.push("/teacher/dashboard")
+      } else {
+        router.push("/student/dashboard")
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")
     } finally {
