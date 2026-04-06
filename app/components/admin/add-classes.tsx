@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { adminService } from "@/app/services/admin-service"
-import { userStorage, subjectStorage } from "@/lib/storage"
+import { userStorage, subjectStorage, classesStorage } from "@/lib/storage"
 import { SubjectManagement } from "@/app/components/admin/subject-management"
 import { useMemo, useState } from "react"
 import {
@@ -60,7 +59,7 @@ export const AddClasses = () => {
   }, [])
 
   const classes = useMemo(() => {
-    return adminService.getAllClasses()
+    return classesStorage.getAll()
   }, [refreshKey])
 
   const availableCourses = useMemo(() => {
@@ -125,7 +124,17 @@ export const AddClasses = () => {
 
   const handleAddClass = () => {
     if (selectedSubject && selectedTeacher) {
-      adminService.addClass(selectedSubject.code, selectedTeacher, semester, year)
+      const newClass = {
+        id: Date.now().toString(),
+        subjectCode: selectedSubject.code,
+        subjectName: selectedSubject.name,
+        teacherId: selectedTeacher,
+        semester: semester,
+        year: year,
+        createdAt: new Date().toISOString(),
+      }
+      const allClasses = classesStorage.getAll()
+      classesStorage.saveAll([...allClasses, newClass])
       setSelectedSubject(null)
       setSelectedTeacher("")
       setSemester("1")
@@ -136,20 +145,13 @@ export const AddClasses = () => {
   }
 
   const handleCreateSubject = () => {
-    if (newCode && newName && newTime && newDay && newUnit) {
-      adminService.createSubject(newCode, newName, newTime, newDay, newUnit)
-      setNewCode("")
-      setNewName("")
-      setNewTime("")
-      setNewDay("")
-      setNewUnit("")
-      setRefreshKey((k) => k + 1)
-    }
+    // Subject creation is now handled by SubjectManagement component
+    // Keep for backward compatibility if needed
   }
 
   const handleDeleteSubject = (id: string) => {
-    adminService.deleteSubject(id)
-    setRefreshKey((k) => k + 1)
+    // Subject deletion is now handled by SubjectManagement component
+    // Keep for backward compatibility if needed
   }
 
   const handleBulkEnroll = () => {
@@ -158,10 +160,19 @@ export const AddClasses = () => {
       return
     }
 
-    adminService.bulkEnrollStudents(
-      bulkClassId,
-      matchingStudents.map((s) => s.id),
-    )
+    // Update students to be enrolled in the class
+    const students = userStorage.getStudents()
+    const updatedStudents = students.map((s: any) => {
+      if (matchingStudents.some((ms) => ms.id === s.id)) {
+        return {
+          ...s,
+          enrolledClasses: [...(s.enrolledClasses || []), bulkClassId],
+        }
+      }
+      return s
+    })
+    userStorage.saveStudents(updatedStudents)
+
     setBulkEnrollMessage(`Successfully enrolled ${matchingStudents.length} students`)
 
     setTimeout(() => {
