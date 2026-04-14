@@ -137,7 +137,7 @@ export const StudentContactAdmin = () => {
           <Button
             onClick={handleSendMessage}
             disabled={isSubmitting || !category || !subject || !message}
-            className="w-full"
+            className="w-full h-11 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Sending..." : "Send Message"}
           </Button>
@@ -230,8 +230,7 @@ export const StudentContactAdmin = () => {
                             <Button
                               onClick={() => handleReply(msg)}
                               disabled={!replyText.trim()}
-                              size="sm"
-                              className="w-full"
+                              className="w-full h-9 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-colors disabled:opacity-50"
                             >
                               Send Reply
                             </Button>

@@ -160,14 +160,12 @@ export const StudentDocuments = () => {
                         </div>
                         <div className="flex gap-2">
                           <a href={doc.url} download={doc.name}>
-                            <Button size="sm" variant="outline">
+                            <Button className="h-8 px-3 text-xs font-medium bg-accent/10 hover:bg-accent/20 text-accent transition-colors">
                               <Download className="w-4 h-4" />
                             </Button>
                           </a>
                           <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-destructive"
+                            className="h-8 px-3 text-xs font-medium bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors"
                             onClick={() => handleDeleteDocument(doc.id)}
                           >
                             <Trash2 className="w-4 h-4" />

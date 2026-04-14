@@ -246,7 +246,11 @@ export const TeacherAttendanceMarking = () => {
                 </table>
               </div>
 
-              <Button onClick={handleSubmitAttendance} disabled={isSubmitting} className="w-full mt-4">
+              <Button 
+                onClick={handleSubmitAttendance} 
+                disabled={isSubmitting} 
+                className="w-full mt-4 h-11 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {isSubmitting ? "Submitting..." : "Submit Attendance"}
               </Button>
             </div>
@@ -294,15 +298,13 @@ export const TeacherAttendanceMarking = () => {
                         </div>
                         <div className="flex gap-2">
                           <Button 
-                            size="sm" 
-                            variant="outline"
+                            className="h-8 px-4 text-xs font-medium bg-accent/10 hover:bg-accent/20 text-accent transition-colors"
                             onClick={() => handleViewDetails(record)}
                           >
                             View Details
                           </Button>
                           <Button 
-                            size="sm" 
-                            variant="destructive"
+                            className="h-8 px-4 text-xs font-medium bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors"
                             onClick={() => handleDeleteAttendance(record.id)}
                           >
                             Delete
@@ -328,8 +330,7 @@ export const TeacherAttendanceMarking = () => {
                   <p className="text-sm text-muted-foreground mt-1">Attendance ID: {viewingRecord.id}</p>
                 </div>
                 <Button 
-                  variant="ghost" 
-                  size="sm"
+                  className="h-9 px-4 font-medium text-foreground hover:bg-muted transition-colors"
                   onClick={() => setIsViewModalOpen(false)}
                 >
                   Close

@@ -2,7 +2,7 @@
 
 import { ProtectedRoute } from "@/app/components/shared/protected-route"
 import { AdminDashboard } from "@/app/components/admin/admin-dashboard"
-import { CollegeCourses } from "@/app/components/admin/college-courses"
+import { SubjectManagement } from "@/app/components/admin/subject-management"
 
 export default function CollegeCoursesPage() {
   return (
@@ -10,10 +10,10 @@ export default function CollegeCoursesPage() {
       <AdminDashboard>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">College Course Management</h1>
-            <p className="text-muted-foreground mt-2">Add or remove diploma and bachelor program courses</p>
+            <h1 className="text-3xl font-bold">Subject & Class Management</h1>
+            <p className="text-muted-foreground mt-2">Create subjects, manage classes, and assign teachers</p>
           </div>
-          <CollegeCourses />
+          <SubjectManagement />
         </div>
       </AdminDashboard>
     </ProtectedRoute>

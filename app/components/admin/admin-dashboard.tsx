@@ -4,8 +4,18 @@ import type React from "react"
 
 import { ProtectedRoute } from "@/app/components/shared/protected-route"
 import { Navbar } from "@/app/components/shared/navbar"
-import { Sidebar } from "@/app/components/shared/sidebar"
+import { BottomNav } from "@/app/components/shared/bottom-nav"
 import { useAuth } from "@/app/contexts/auth-context"
+import {
+  LayoutDashboard,
+  Clock,
+  Users,
+  BookOpen,
+  CheckCircle,
+  MessageCircle,
+  BarChart3,
+  Settings,
+} from "lucide-react"
 
 interface AdminDashboardProps {
   children: React.ReactNode
@@ -14,29 +24,24 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
   const { user } = useAuth()
 
-  const sidebarItems = [
-    { label: "Dashboard", href: "/admin/dashboard" },
-    { label: "Pending Registrations", href: "/admin/pending-registrations" },
-    { label: "User Management", href: "/admin/user-management" },
-    { label: "Classes & Subjects", href: "/admin/classes" },
-    { label: "Grade Approval", href: "/admin/grade-approval" },
-    { label: "Request Management", href: "/admin/requests" },
-    { label: "Student Messages", href: "/admin/messages" },
-    { label: "Financial Management", href: "/admin/financial" },
-    { label: "Library Management", href: "/admin/library" },
-    { label: "Notifications", href: "/admin/notifications" },
-    { label: "Feedback", href: "/admin/feedback" },
-    { label: "Analytics", href: "/admin/analytics" },
-    { label: "Archive Management", href: "/admin/archives" },
-    { label: "Settings", href: "/admin/settings" },
+  const navItems = [
+    { label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+    { label: "Pending", href: "/admin/pending-registrations", icon: <Clock className="w-5 h-5" /> },
+    { label: "Users", href: "/admin/user-management", icon: <Users className="w-5 h-5" /> },
+    { label: "Classes", href: "/admin/classes", icon: <BookOpen className="w-5 h-5" /> },
+    { label: "Grades", href: "/admin/grade-approval", icon: <CheckCircle className="w-5 h-5" /> },
+    { label: "Requests", href: "/admin/requests", icon: <MessageCircle className="w-5 h-5" /> },
+    { label: "Messages", href: "/admin/messages", icon: <MessageCircle className="w-5 h-5" /> },
+    { label: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="w-5 h-5" /> },
+    { label: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
   ]
 
   return (
-    <ProtectedRoute allowedRoles={["admin"]}>
+    <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
       <Navbar title={`Admin - ${user?.firstName}`} />
-      <div className="flex min-h-screen bg-background">
-        <Sidebar items={sidebarItems} />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+      <div className="flex flex-col min-h-screen bg-background">
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
+        <BottomNav items={navItems} />
       </div>
     </ProtectedRoute>
   )

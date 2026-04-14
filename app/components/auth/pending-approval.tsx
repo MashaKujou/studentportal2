@@ -29,7 +29,7 @@ export const PendingApproval = () => {
         </div>
 
         <Link href="/login">
-          <Button variant="outline" className="w-full bg-transparent">
+          <Button className="w-full h-10 font-medium text-foreground hover:bg-muted transition-colors">
             Back to Login
           </Button>
         </Link>

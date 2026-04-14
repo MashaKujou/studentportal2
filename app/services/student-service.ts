@@ -170,10 +170,6 @@ export const studentService = {
     }
     return true
   },
-      STORAGE_KEYS.DOCUMENTS,
-      documents.filter((d) => !(d.id === documentId && d.studentId === studentId)),
-    )
-  },
 
   // Student profile operations
   updateStudentProfile: (studentId: string, updates: { profilePicture?: string; password?: string }): void => {

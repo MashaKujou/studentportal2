@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { adminService } from "@/app/services/admin-service"
-import { userStorage, subjectStorage } from "@/lib/storage"
+import { userStorage, subjectStorage, classesStorage } from "@/lib/storage"
+import { SubjectManagement } from "@/app/components/admin/subject-management"
 import { useMemo, useState } from "react"
 import {
   ACADEMIC_LEVELS,
@@ -59,7 +59,7 @@ export const AddClasses = () => {
   }, [])
 
   const classes = useMemo(() => {
-    return adminService.getAllClasses()
+    return classesStorage.getAll()
   }, [refreshKey])
 
   const availableCourses = useMemo(() => {
@@ -124,7 +124,17 @@ export const AddClasses = () => {
 
   const handleAddClass = () => {
     if (selectedSubject && selectedTeacher) {
-      adminService.addClass(selectedSubject.code, selectedTeacher, semester, year)
+      const newClass = {
+        id: Date.now().toString(),
+        subjectCode: selectedSubject.code,
+        subjectName: selectedSubject.name,
+        teacherId: selectedTeacher,
+        semester: semester,
+        year: year,
+        createdAt: new Date().toISOString(),
+      }
+      const allClasses = classesStorage.getAll()
+      classesStorage.saveAll([...allClasses, newClass])
       setSelectedSubject(null)
       setSelectedTeacher("")
       setSemester("1")
@@ -135,20 +145,13 @@ export const AddClasses = () => {
   }
 
   const handleCreateSubject = () => {
-    if (newCode && newName && newTime && newDay && newUnit) {
-      adminService.createSubject(newCode, newName, newTime, newDay, newUnit)
-      setNewCode("")
-      setNewName("")
-      setNewTime("")
-      setNewDay("")
-      setNewUnit("")
-      setRefreshKey((k) => k + 1)
-    }
+    // Subject creation is now handled by SubjectManagement component
+    // Keep for backward compatibility if needed
   }
 
   const handleDeleteSubject = (id: string) => {
-    adminService.deleteSubject(id)
-    setRefreshKey((k) => k + 1)
+    // Subject deletion is now handled by SubjectManagement component
+    // Keep for backward compatibility if needed
   }
 
   const handleBulkEnroll = () => {
@@ -157,10 +160,19 @@ export const AddClasses = () => {
       return
     }
 
-    adminService.bulkEnrollStudents(
-      bulkClassId,
-      matchingStudents.map((s) => s.id),
-    )
+    // Update students to be enrolled in the class
+    const students = userStorage.getStudents()
+    const updatedStudents = students.map((s: any) => {
+      if (matchingStudents.some((ms) => ms.id === s.id)) {
+        return {
+          ...s,
+          enrolledClasses: [...(s.enrolledClasses || []), bulkClassId],
+        }
+      }
+      return s
+    })
+    userStorage.saveStudents(updatedStudents)
+
     setBulkEnrollMessage(`Successfully enrolled ${matchingStudents.length} students`)
 
     setTimeout(() => {
@@ -287,7 +299,12 @@ export const AddClasses = () => {
                     value={subjectCode}
                     onChange={(e) => setSubjectCode(e.target.value.toUpperCase())}
                   />
-                  <Button onClick={handleSearchSubject}>Search</Button>
+                  <Button 
+                    onClick={handleSearchSubject}
+                    className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+                  >
+                    Search
+                  </Button>
                 </div>
               </div>
 
@@ -354,9 +371,12 @@ export const AddClasses = () => {
                     </div>
                   </div>
 
-                  <Button onClick={handleAddClass} className="w-full bg-green-600 hover:bg-green-700">
-                    Create Class
-                  </Button>
+                <Button 
+                  onClick={handleAddClass} 
+                  className="w-full h-11 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
+                >
+                  Create Class Section
+                </Button>
                 </>
               )}
             </CardContent>
@@ -444,10 +464,9 @@ export const AddClasses = () => {
                         </p>
                       </div>
                       <Button 
-                        variant="outline" 
-                        size="sm"
                         onClick={handleViewBulkStudents}
                         disabled={matchingStudents.length === 0}
+                        className="h-9 px-4 font-medium bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         View Students
                       </Button>
@@ -479,7 +498,7 @@ export const AddClasses = () => {
                   <Button
                     onClick={handleBulkEnroll}
                     disabled={matchingStudents.length === 0}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full h-11 font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
                     Enroll All {matchingStudents.length} Students
                   </Button>
@@ -490,78 +509,7 @@ export const AddClasses = () => {
         </TabsContent>
 
         <TabsContent value="manage-subjects">
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Subject</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  placeholder="Subject Code (e.g., CS101)"
-                  value={newCode}
-                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                />
-                <Input placeholder="Subject Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-                <Input
-                  placeholder="Time (e.g., 8:00 AM - 9:30 AM)"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                />
-                <select
-                  value={newDay}
-                  onChange={(e) => setNewDay(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Day</option>
-                  {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-                <Input
-                  placeholder="Units/Credits"
-                  type="number"
-                  value={newUnit}
-                  onChange={(e) => setNewUnit(e.target.value)}
-                />
-                <Button onClick={handleCreateSubject} className="w-full">
-                  Create Subject
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Subject List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {subjects.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No subjects created yet</p>
-                ) : (
-                  <div className="space-y-2">
-                    {subjects.map((subject) => (
-                      <div
-                        key={subject.id}
-                        className="p-3 border rounded flex items-start justify-between hover:bg-muted"
-                      >
-                        <div className="flex-1">
-                          <p className="font-semibold">{subject.code}</p>
-                          <p className="text-sm text-muted-foreground">{subject.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {subject.day} • {subject.time}
-                          </p>
-                        </div>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteSubject(subject.id)}>
-                          Delete
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <SubjectManagement />
         </TabsContent>
 
         <TabsContent value="view-classes">
@@ -601,10 +549,9 @@ export const AddClasses = () => {
                                 }
                               </p>
                               <Button 
-                                size="sm" 
-                                variant="outline"
                                 onClick={() => handleViewStudents(cls)}
                                 disabled={studentCount === 0}
+                                className="h-8 px-3 text-xs font-medium bg-accent/10 hover:bg-accent/20 text-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               >
                                 View Students
                               </Button>
@@ -683,9 +630,7 @@ export const AddClasses = () => {
 
                   {(academicLevelFilter || yearFilter) && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 w-full"
+                      className="mt-3 w-full h-9 font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => {
                         setAcademicLevelFilter("")
                         setYearFilter("")
@@ -703,9 +648,13 @@ export const AddClasses = () => {
                   value={attendanceSearchId}
                   onChange={(e) => setAttendanceSearchId(e.target.value)}
                 />
-                <Button onClick={handleSearchAttendance}>Search</Button>
                 <Button 
-                  variant="outline" 
+                  onClick={handleSearchAttendance}
+                  className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+                >
+                  Search
+                </Button>
+                <Button 
                   onClick={() => {
                     setAttendanceSearchId("")
                     setAttendanceRecords([])
@@ -715,6 +664,7 @@ export const AddClasses = () => {
                     setAcademicLevelFilter("")
                     setYearFilter("")
                   }}
+                  className="h-10 px-6 font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
                 >
                   Clear
                 </Button>

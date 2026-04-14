@@ -4,18 +4,21 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { analyticsService } from '@/app/services/analytics-service'
-import { Users, BookOpen, MessageSquare, TrendingUp, DollarSign, Award, PieChart } from 'lucide-react'
+import { Users, BookOpen, MessageSquare, TrendingUp, Award, PieChart } from 'lucide-react'
 
 export const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState('overview')
 
-  const stats = analyticsService.getSystemAnalytics()
-  const studentAnalytics = analyticsService.getStudentAnalytics()
-  const financialAnalytics = analyticsService.getFinancialAnalytics()
-  const libraryAnalytics = analyticsService.getLibraryAnalytics()
-  const feedbackAnalytics = analyticsService.getFeedbackAnalytics()
-  const attendanceAnalytics = analyticsService.getAttendanceAnalytics()
+  // Placeholder data - analytics service removed
+  const stats = {
+    totalStudents: 0,
+    approvedStudents: 0,
+    pendingStudents: 0,
+    totalTeachers: 0,
+  }
+  const studentAnalytics = {}
+  const feedbackAnalytics = {}
+  const attendanceAnalytics = {}
 
   return (
     <div className="space-y-6">
@@ -25,11 +28,9 @@ export const AdminAnalytics = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="library">Library</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
         </TabsList>
@@ -84,30 +85,6 @@ export const AdminAnalytics = () => {
                 <p className="text-xs text-muted-foreground">Faculty members</p>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" /> Financial Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">₱{(financialAnalytics?.totalCollected || 0).toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Total collected</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" /> Library Items
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{libraryAnalytics?.totalBooks || 0}</div>
-                <p className="text-xs text-muted-foreground">Books & modules</p>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
@@ -150,88 +127,6 @@ export const AdminAnalytics = () => {
                 <div className="flex justify-between">
                   <span>Rejected:</span>
                   <Badge variant="destructive">{studentAnalytics?.rejected || 0}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Financial Tab */}
-        <TabsContent value="financial" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Outstanding:</span>
-                  <span className="font-semibold text-red-600">₱{(financialAnalytics?.outstanding || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fully Paid:</span>
-                  <span className="font-semibold text-green-600">{financialAnalytics?.fullyPaid || 0} records</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Partial Payment:</span>
-                  <span className="font-semibold text-yellow-600">{financialAnalytics?.partialPayment || 0} records</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Type</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Tuition Fees:</span>
-                  <span className="font-semibold">₱{(financialAnalytics?.tuitionRevenue || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Other Fees:</span>
-                  <span className="font-semibold">₱{(financialAnalytics?.otherFeesRevenue || 0).toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Library Tab */}
-        <TabsContent value="library" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Library Inventory</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Available Books:</span>
-                  <span className="font-semibold text-green-600">{libraryAnalytics?.available || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Currently Borrowed:</span>
-                  <span className="font-semibold text-blue-600">{libraryAnalytics?.borrowed || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Reserved:</span>
-                  <span className="font-semibold text-yellow-600">{libraryAnalytics?.reserved || 0}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Circulation Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Checkouts (this month):</span>
-                  <span className="font-semibold">{libraryAnalytics?.checkoutsThisMonth || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Average Loan Duration:</span>
-                  <span className="font-semibold">{libraryAnalytics?.avgLoanDays || 0} days</span>
                 </div>
               </CardContent>
             </Card>

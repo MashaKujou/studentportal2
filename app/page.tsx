@@ -49,10 +49,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/login">
-                <Button variant="ghost">Login</Button>
+                <Button className="h-9 px-4 font-medium text-foreground hover:bg-muted transition-colors">Login</Button>
               </Link>
               <Link href="/register">
-                <Button>Join us!</Button>
+                <Button className="h-9 px-4 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md">Join us!</Button>
               </Link>
             </div>
           </div>
@@ -72,12 +72,12 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
-                <Button size="lg" className="w-full sm:w-auto text-base">
+                <Button size="lg" className="w-full sm:w-auto text-base h-12 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg">
                   Create your Account
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base bg-transparent">
+                <Button size="lg" className="w-full sm:w-auto text-base h-12 font-semibold text-foreground hover:bg-muted transition-colors border-2">
                   Login to Portal
                 </Button>
               </Link>
@@ -125,7 +125,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <Link href="/login" className="block">
-                  <Button className="w-full">Student Portal</Button>
+                  <Button className="w-full h-10 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg">Student Portal</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -159,7 +159,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <Link href="/login" className="block">
-                  <Button className="w-full">Teacher Portal</Button>
+                  <Button className="w-full h-10 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg">Teacher Portal</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -193,7 +193,7 @@ export default function HomePage() {
                   </li>
                 </ul>
                 <Link href="/login" className="block">
-                  <Button className="w-full">Admin Portal</Button>
+                  <Button className="w-full h-10 font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg">Admin Portal</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -290,7 +290,7 @@ export default function HomePage() {
             Join thousands of students, teachers, and administrators managing their academic journey with our platform.
           </p>
           <Link href="/register">
-            <Button size="lg" className="text-base">
+            <Button size="lg" className="text-base h-12 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg">
               Create Your Account
             </Button>
           </Link>

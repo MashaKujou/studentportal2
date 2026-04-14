@@ -4,8 +4,22 @@ import type React from "react"
 
 import { ProtectedRoute } from "@/app/components/shared/protected-route"
 import { Navbar } from "@/app/components/shared/navbar"
-import { Sidebar } from "@/app/components/shared/sidebar"
+import { BottomNav } from "@/app/components/shared/bottom-nav"
 import { useAuth } from "@/app/contexts/auth-context"
+import {
+  LayoutDashboard,
+  BookOpen,
+  BarChart3,
+  Calendar,
+  Clock,
+  FileText,
+  HelpCircle,
+  DollarSign,
+  Library,
+  Bell,
+  MessageSquare,
+  MessageCircle,
+} from "lucide-react"
 
 interface StudentDashboardProps {
   children: React.ReactNode
@@ -14,27 +28,27 @@ interface StudentDashboardProps {
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ children }) => {
   const { user } = useAuth()
 
-  const sidebarItems = [
-    { label: "Dashboard", href: "/student/dashboard" },
-    { label: "My Classes", href: "/student/classes" },
-    { label: "Grades", href: "/student/grades" },
-    { label: "Attendance", href: "/student/attendance" },
-    { label: "Schedule", href: "/student/schedule" },
-    { label: "Documents", href: "/student/documents" },
-    { label: "Requests", href: "/student/requests" },
-    { label: "Financial", href: "/student/financial" },
-    { label: "Library", href: "/student/library" },
-    { label: "Notifications", href: "/student/notifications" },
-    { label: "Feedback", href: "/student/feedback" },
-    { label: "Contact Admin", href: "/student/contact-admin" },
+  const navItems = [
+    { label: "Dashboard", href: "/student/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+    { label: "Classes", href: "/student/classes", icon: <BookOpen className="w-5 h-5" /> },
+    { label: "Grades", href: "/student/grades", icon: <BarChart3 className="w-5 h-5" /> },
+    { label: "Attendance", href: "/student/attendance", icon: <Clock className="w-5 h-5" /> },
+    { label: "Schedule", href: "/student/schedule", icon: <Calendar className="w-5 h-5" /> },
+    { label: "Documents", href: "/student/documents", icon: <FileText className="w-5 h-5" /> },
+    { label: "Requests", href: "/student/requests", icon: <HelpCircle className="w-5 h-5" /> },
+    { label: "Financial", href: "/student/financial", icon: <DollarSign className="w-5 h-5" /> },
+    { label: "Library", href: "/student/library", icon: <Library className="w-5 h-5" /> },
+    { label: "Notifications", href: "/student/notifications", icon: <Bell className="w-5 h-5" /> },
+    { label: "Feedback", href: "/student/feedback", icon: <MessageSquare className="w-5 h-5" /> },
+    { label: "Contact Admin", href: "/student/contact-admin", icon: <MessageCircle className="w-5 h-5" /> },
   ]
 
   return (
     <ProtectedRoute allowedRoles={["student"]}>
       <Navbar title={`Welcome, ${user?.firstName}`} />
-      <div className="flex min-h-screen bg-background">
-        <Sidebar items={sidebarItems} />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+      <div className="flex flex-col min-h-screen bg-background">
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
+        <BottomNav items={navItems} />
       </div>
     </ProtectedRoute>
   )

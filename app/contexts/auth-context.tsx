@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { loginUser } from "@/app/actions/auth-actions"
+import { userStorage } from "@/lib/storage"
 
 // Use anon key for normal operations
 const supabase = createClient(
@@ -16,7 +16,7 @@ type User = any & { role: string }
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
   logout: () => void
   registerStudent: (data: any) => Promise<void>
   registerTeacher: (data: any) => Promise<void>
@@ -51,16 +51,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // Call server action for secure login
-      const result = await loginUser(email, password)
+      // Try to find user in different roles
+      const admins = userStorage.getAdmins()
+      const teachers = userStorage.getTeachers()
+      const students = userStorage.getStudents()
 
-      if (!result.success) {
-        throw new Error(result.error || "Login failed")
+      let foundUser: any = null
+      let role: string | null = null
+
+      // Check admins
+      const admin = admins.find((a: any) => a.email === email && a.password === password)
+      if (admin) {
+        foundUser = admin
+        role = admin.role || "admin"
       }
 
-      setUser(result.user as User)
-      sessionStorage.setItem("auth_user", JSON.stringify(result.user))
-      return
+      // Check teachers
+      if (!foundUser) {
+        const teacher = teachers.find((t: any) => t.email === email && t.password === password)
+        if (teacher) {
+          foundUser = teacher
+          role = "teacher"
+        }
+      }
+
+      // Check students
+      if (!foundUser) {
+        const student = students.find((s: any) => s.email === email && s.password === password)
+        if (student) {
+          foundUser = student
+          role = "student"
+        }
+      }
+
+      if (!foundUser) {
+        throw new Error("Invalid email or password")
+      }
+
+      // Store user with role in sessionStorage
+      const userToStore = {
+        ...foundUser,
+        role: role,
+      }
+
+      sessionStorage.setItem("auth_user", JSON.stringify(userToStore))
+      setUser(userToStore)
+      
+      return userToStore
     } catch (error) {
       console.error("Login error:", error)
       throw error

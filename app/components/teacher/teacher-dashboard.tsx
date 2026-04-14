@@ -4,8 +4,16 @@ import type React from "react"
 
 import { ProtectedRoute } from "@/app/components/shared/protected-route"
 import { Navbar } from "@/app/components/shared/navbar"
-import { Sidebar } from "@/app/components/shared/sidebar"
+import { BottomNav } from "@/app/components/shared/bottom-nav"
 import { useAuth } from "@/app/contexts/auth-context"
+import {
+  LayoutDashboard,
+  BookOpen,
+  PenTool,
+  CheckCircle,
+  FileText,
+  BarChart3,
+} from "lucide-react"
 
 interface TeacherDashboardProps {
   children: React.ReactNode
@@ -14,21 +22,21 @@ interface TeacherDashboardProps {
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ children }) => {
   const { user } = useAuth()
 
-  const sidebarItems = [
-    { label: "Dashboard", href: "/teacher/dashboard" },
-    { label: "My Classes", href: "/teacher/classes" },
-    { label: "Grade Input", href: "/teacher/grade-input" },
-    { label: "Attendance", href: "/teacher/attendance-marking" },
-    { label: "Materials", href: "/teacher/materials" },
-    { label: "Analytics", href: "/teacher/analytics" },
+  const navItems = [
+    { label: "Dashboard", href: "/teacher/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+    { label: "Classes", href: "/teacher/classes", icon: <BookOpen className="w-5 h-5" /> },
+    { label: "Grades", href: "/teacher/grade-input", icon: <PenTool className="w-5 h-5" /> },
+    { label: "Attendance", href: "/teacher/attendance-marking", icon: <CheckCircle className="w-5 h-5" /> },
+    { label: "Materials", href: "/teacher/materials", icon: <FileText className="w-5 h-5" /> },
+    { label: "Analytics", href: "/teacher/analytics", icon: <BarChart3 className="w-5 h-5" /> },
   ]
 
   return (
     <ProtectedRoute allowedRoles={["teacher"]}>
       <Navbar title={`Teacher - ${user?.firstName}`} />
-      <div className="flex min-h-screen bg-background">
-        <Sidebar items={sidebarItems} />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+      <div className="flex flex-col min-h-screen bg-background">
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
+        <BottomNav items={navItems} />
       </div>
     </ProtectedRoute>
   )

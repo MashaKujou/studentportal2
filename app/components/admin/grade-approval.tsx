@@ -148,20 +148,32 @@ export const GradeApproval = () => {
                           placeholder="Provide feedback if rejecting..."
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleApprove(grade.id)} className="flex-1" variant="default">
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={() => handleApprove(grade.id)} 
+                          className="flex-1 h-10 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
+                        >
                           Approve
                         </Button>
-                        <Button onClick={() => handleReject(grade.id)} className="flex-1" variant="destructive">
+                        <Button 
+                          onClick={() => handleReject(grade.id)} 
+                          className="flex-1 h-10 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all duration-200"
+                        >
                           Reject
                         </Button>
-                        <Button onClick={() => setSelectedGrade(null)} variant="outline">
+                        <Button 
+                          onClick={() => setSelectedGrade(null)} 
+                          className="h-10 px-6 font-medium text-foreground hover:bg-muted transition-colors"
+                        >
                           Cancel
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <Button onClick={() => setSelectedGrade(grade)} className="w-full mt-2">
+                    <Button 
+                      onClick={() => setSelectedGrade(grade)} 
+                      className="w-full mt-2 h-10 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-colors"
+                    >
                       Review Grade
                     </Button>
                   )}

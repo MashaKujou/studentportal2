@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { adminService } from "@/app/services/admin-service"
+import { userStorage } from "@/lib/storage"
 import { useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 
@@ -10,17 +10,28 @@ export const PendingRegistrations = () => {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const pendingStudents = useMemo(() => {
-    return adminService.getPendingStudents()
+    const students = userStorage.getStudents()
+    return students.filter((s: any) => s.status === "pending")
   }, [refreshKey])
 
   const handleApprove = (studentId: string) => {
-    adminService.approveStudent(studentId)
-    setRefreshKey((k) => k + 1)
+    const students = userStorage.getStudents()
+    const studentIndex = students.findIndex((s: any) => s.id === studentId)
+    if (studentIndex !== -1) {
+      students[studentIndex].status = "approved"
+      userStorage.saveStudents(students)
+      setRefreshKey((k) => k + 1)
+    }
   }
 
   const handleReject = (studentId: string) => {
-    adminService.rejectStudent(studentId)
-    setRefreshKey((k) => k + 1)
+    const students = userStorage.getStudents()
+    const studentIndex = students.findIndex((s: any) => s.id === studentId)
+    if (studentIndex !== -1) {
+      students[studentIndex].status = "rejected"
+      userStorage.saveStudents(students)
+      setRefreshKey((k) => k + 1)
+    }
   }
 
   return (
@@ -57,15 +68,17 @@ export const PendingRegistrations = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3 pt-3">
                     <Button
-                      size="sm"
                       onClick={() => handleApprove(student.id)}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="flex-1 h-9 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
                     >
                       Approve
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleReject(student.id)}>
+                    <Button 
+                      onClick={() => handleReject(student.id)}
+                      className="flex-1 h-9 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all duration-200"
+                    >
                       Reject
                     </Button>
                   </div>

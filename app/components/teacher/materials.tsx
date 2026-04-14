@@ -108,7 +108,11 @@ export const TeacherMaterials = () => {
                 </select>
               </div>
 
-              <Button onClick={handleUploadMaterial} disabled={isUploading || !title || !type} className="w-full">
+              <Button 
+                onClick={handleUploadMaterial} 
+                disabled={isUploading || !title || !type} 
+                className="w-full h-10 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {isUploading ? "Uploading..." : "Upload Material"}
               </Button>
             </>
@@ -135,7 +139,7 @@ export const TeacherMaterials = () => {
                       <p className="font-semibold">{mat.title}</p>
                       <p className="text-sm text-muted-foreground">{mat.type}</p>
                     </div>
-                    <Button size="sm" variant="outline" className="text-destructive bg-transparent">
+                    <Button className="h-8 px-3 text-xs font-medium bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
