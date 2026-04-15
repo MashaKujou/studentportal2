@@ -32,7 +32,7 @@ export const StudentDashboardHome = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Welcome, {user.firstName}</h1>
+        <h1 className="text-3xl font-bold">Welcome, {user.firstName} {user.middleName ? `${user.middleName} ` : ""}{user.lastName}</h1>
         <p className="text-muted-foreground mt-2">
           Grade {(user as any).grade} - Section {(user as any).section}
         </p>

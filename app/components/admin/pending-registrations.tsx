@@ -15,22 +15,26 @@ export const PendingRegistrations = () => {
   }, [refreshKey])
 
   const handleApprove = (studentId: string) => {
-    const students = userStorage.getStudents()
-    const studentIndex = students.findIndex((s: any) => s.id === studentId)
-    if (studentIndex !== -1) {
-      students[studentIndex].status = "approved"
-      userStorage.saveStudents(students)
+    try {
+      userStorage.updateStudent(studentId, {
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        approvedBy: "admin",
+      } as any)
       setRefreshKey((k) => k + 1)
+    } catch (error) {
+      console.error("Error approving student:", error)
     }
   }
 
   const handleReject = (studentId: string) => {
-    const students = userStorage.getStudents()
-    const studentIndex = students.findIndex((s: any) => s.id === studentId)
-    if (studentIndex !== -1) {
-      students[studentIndex].status = "rejected"
-      userStorage.saveStudents(students)
+    try {
+      userStorage.updateStudent(studentId, {
+        status: "rejected",
+      } as any)
       setRefreshKey((k) => k + 1)
+    } catch (error) {
+      console.error("Error rejecting student:", error)
     }
   }
 

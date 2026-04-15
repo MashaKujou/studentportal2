@@ -22,7 +22,7 @@ export const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [editingUser, setEditingUser] = useState<any>(null)
   const [addingUser, setAddingUser] = useState<"student" | "teacher" | null>(null)
-  const [editFormData, setEditFormData] = useState({ firstName: "", lastName: "", status: "", email: "" })
+  const [editFormData, setEditFormData] = useState({ firstName: "", middleName: "", lastName: "", status: "", email: "" })
   const [addFormData, setAddFormData] = useState<any>({})
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -48,6 +48,7 @@ export const UserManagement = () => {
     setEditingUser({ ...user, type })
     setEditFormData({
       firstName: user.firstName,
+      middleName: user.middleName || "",
       lastName: user.lastName,
       status: user.status,
       email: user.email,
@@ -59,12 +60,14 @@ export const UserManagement = () => {
       if (editingUser.type === "student") {
         userStorage.updateStudent(editingUser.id, {
           firstName: editFormData.firstName,
+          middleName: editFormData.middleName,
           lastName: editFormData.lastName,
           status: editFormData.status as any,
         })
       } else {
         userStorage.updateTeacher(editingUser.id, {
           firstName: editFormData.firstName,
+          middleName: editFormData.middleName,
           lastName: editFormData.lastName,
           status: editFormData.status as any,
         })
@@ -101,6 +104,7 @@ export const UserManagement = () => {
         email: addFormData.email,
         password: addFormData.password,
         firstName: addFormData.firstName,
+        middleName: addFormData.middleName || "",
         lastName: addFormData.lastName,
         studentId: generateId("ID"),
         academicLevel: addFormData.academicLevel,
@@ -127,6 +131,7 @@ export const UserManagement = () => {
         email: addFormData.email,
         password: addFormData.password,
         firstName: addFormData.firstName,
+        middleName: addFormData.middleName || "",
         lastName: addFormData.lastName,
         teacherId: generateId("ID"),
         department: addFormData.department,
@@ -189,7 +194,7 @@ export const UserManagement = () => {
                     >
                       <div className="flex-1">
                         <p className="font-semibold">
-                          {student.firstName} {student.lastName}
+                          {student.firstName} {student.middleName ? `${student.middleName} ` : ""}{student.lastName}
                         </p>
                         <p className="text-sm text-muted-foreground">{student.email}</p>
                         <p className="text-xs text-muted-foreground">
@@ -247,7 +252,7 @@ export const UserManagement = () => {
                     >
                       <div className="flex-1">
                         <p className="font-semibold">
-                          {teacher.firstName} {teacher.lastName}
+                          {teacher.firstName} {teacher.middleName ? `${teacher.middleName} ` : ""}{teacher.lastName}
                         </p>
                         <p className="text-sm text-muted-foreground">{teacher.email}</p>
                         <p className="text-xs text-muted-foreground">
@@ -290,6 +295,13 @@ export const UserManagement = () => {
               <Input
                 value={editFormData.firstName}
                 onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Middle Name</label>
+              <Input
+                value={editFormData.middleName}
+                onChange={(e) => setEditFormData({ ...editFormData, middleName: e.target.value })}
               />
             </div>
             <div>
@@ -337,13 +349,21 @@ export const UserManagement = () => {
             <DialogTitle>Add New Student</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium">First Name</label>
                 <Input
                   value={addFormData.firstName || ""}
                   onChange={(e) => setAddFormData({ ...addFormData, firstName: e.target.value })}
                   placeholder="First Name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Middle Name</label>
+                <Input
+                  value={addFormData.middleName || ""}
+                  onChange={(e) => setAddFormData({ ...addFormData, middleName: e.target.value })}
+                  placeholder="Middle Name"
                 />
               </div>
               <div>
@@ -511,13 +531,21 @@ export const UserManagement = () => {
             <DialogTitle>Add New Teacher</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium">First Name</label>
                 <Input
                   value={addFormData.firstName || ""}
                   onChange={(e) => setAddFormData({ ...addFormData, firstName: e.target.value })}
                   placeholder="First Name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Middle Name</label>
+                <Input
+                  value={addFormData.middleName || ""}
+                  onChange={(e) => setAddFormData({ ...addFormData, middleName: e.target.value })}
+                  placeholder="Middle Name"
                 />
               </div>
               <div>

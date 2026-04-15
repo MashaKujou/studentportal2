@@ -59,6 +59,7 @@ export const validateRegistrationForm = (data: {
   password: string
   confirmPassword: string
   firstName: string
+  middleName: string
   lastName: string
 }): ValidationResult => {
   const errors: Record<string, string> = {}
@@ -79,6 +80,10 @@ export const validateRegistrationForm = (data: {
 
   if (!validateName(data.firstName)) {
     errors.firstName = "First name must be 2-50 characters"
+  }
+
+  if (data.middleName && !validateName(data.middleName)) {
+    errors.middleName = "Middle name must be 2-50 characters"
   }
 
   if (!validateName(data.lastName)) {

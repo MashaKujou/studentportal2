@@ -120,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: data.email,
         password: data.password,
         firstName: data.firstName,
+        middleName: data.middleName || "",
         lastName: data.lastName,
         studentId: data.studentId || `STU_${Date.now()}`,
         academicLevel: data.academicLevel,
