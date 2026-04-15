@@ -114,12 +114,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerStudent = async (data: any) => {
     setIsLoading(true)
     try {
-      // Check if email already exists
-      const students = userStorage.getStudents()
-      if (students.some((s: any) => s.email === data.email)) {
-        throw new Error("Email already registered")
-      }
-
       // Create new student record
       const newStudent = {
         id: `student_${Date.now()}`,
@@ -127,19 +121,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        studentId: data.studentId,
+        studentId: data.studentId || `STU_${Date.now()}`,
         academicLevel: data.academicLevel,
-        grade: data.grade || null,
-        strand: data.strand || null,
-        year: data.year || null,
-        course: data.course || null,
+        grade: data.grade || undefined,
+        strand: data.strand || undefined,
+        year: data.year || undefined,
+        course: data.course || undefined,
         status: "pending",
-        role: "student",
-        createdAt: new Date().toISOString(),
+        registeredAt: new Date().toISOString(),
       }
 
-      // Save to localStorage
-      userStorage.saveStudents([...students, newStudent])
+      // Add to localStorage using userStorage
+      userStorage.addStudent(newStudent)
       
       return newStudent
     } catch (error) {
@@ -153,12 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerTeacher = async (data: any) => {
     setIsLoading(true)
     try {
-      // Check if email already exists
-      const teachers = userStorage.getTeachers()
-      if (teachers.some((t: any) => t.email === data.email)) {
-        throw new Error("Email already registered")
-      }
-
       // Create new teacher record
       const newTeacher = {
         id: `teacher_${Date.now()}`,
@@ -166,15 +153,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
+        teacherId: data.teacherId || `TCH_${Date.now()}`,
         department: data.department,
-        specialization: data.specialty || null,
+        subjects: data.subjects || [],
         status: "active",
-        role: "teacher",
-        createdAt: new Date().toISOString(),
+        registeredAt: new Date().toISOString(),
       }
 
-      // Save to localStorage
-      userStorage.saveTeachers([...teachers, newTeacher])
+      // Add to localStorage using userStorage
+      userStorage.addTeacher(newTeacher)
       
       return newTeacher
     } catch (error) {
@@ -188,12 +175,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerAdmin = async (data: any) => {
     setIsLoading(true)
     try {
-      // Check if email already exists
-      const admins = userStorage.getAdmins()
-      if (admins.some((a: any) => a.email === data.email)) {
-        throw new Error("Email already registered")
-      }
-
       // Create new admin record
       const newAdmin = {
         id: `admin_${Date.now()}`,
@@ -202,13 +183,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName: data.firstName,
         lastName: data.lastName,
         role: "super_admin",
-        permissionLevel: "full_access",
+        permissions: ["all"],
         status: "active",
-        createdAt: new Date().toISOString(),
+        registeredAt: new Date().toISOString(),
       }
 
-      // Save to localStorage
-      userStorage.saveAdmins([...admins, newAdmin])
+      // Add to localStorage using userStorage
+      userStorage.addAdmin(newAdmin)
       
       return newAdmin
     } catch (error) {
