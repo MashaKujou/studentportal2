@@ -114,40 +114,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerStudent = async (data: any) => {
     setIsLoading(true)
     try {
-      // First create user in users table
-      const { data: newUser, error: userError } = await supabase
-        .from("users")
-        .insert([
-          {
-            email: data.email,
-            password_hash: data.password,
-            full_name: `${data.firstName} ${data.lastName}`,
-            role: "student",
-            status: "active",
-          },
-        ])
-        .select()
+      // Check if email already exists
+      const students = userStorage.getStudents()
+      if (students.some((s: any) => s.email === data.email)) {
+        throw new Error("Email already registered")
+      }
 
-      if (userError) throw userError
+      // Create new student record
+      const newStudent = {
+        id: `student_${Date.now()}`,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        studentId: data.studentId,
+        academicLevel: data.academicLevel,
+        grade: data.grade || null,
+        strand: data.strand || null,
+        year: data.year || null,
+        course: data.course || null,
+        status: "pending",
+        role: "student",
+        createdAt: new Date().toISOString(),
+      }
 
-      const userId = newUser?.[0]?.id
-      if (!userId) throw new Error("Failed to create user")
-
-      // Then create student record
-      const { error: studentError } = await supabase
-        .from("students")
-        .insert([
-          {
-            user_id: userId,
-            academic_level: data.academicLevel,
-            strand: data.strand || null,
-            program: data.program || null,
-            year: data.year || null,
-            enrollment_status: "pending",
-          },
-        ])
-
-      if (studentError) throw studentError
+      // Save to localStorage
+      userStorage.saveStudents([...students, newStudent])
+      
+      return newStudent
     } catch (error) {
       console.error("Student registration error:", error)
       throw error
@@ -159,37 +153,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerTeacher = async (data: any) => {
     setIsLoading(true)
     try {
-      // First create user in users table
-      const { data: newUser, error: userError } = await supabase
-        .from("users")
-        .insert([
-          {
-            email: data.email,
-            password_hash: data.password,
-            full_name: `${data.firstName} ${data.lastName}`,
-            role: "teacher",
-            status: "active",
-          },
-        ])
-        .select()
+      // Check if email already exists
+      const teachers = userStorage.getTeachers()
+      if (teachers.some((t: any) => t.email === data.email)) {
+        throw new Error("Email already registered")
+      }
 
-      if (userError) throw userError
+      // Create new teacher record
+      const newTeacher = {
+        id: `teacher_${Date.now()}`,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        department: data.department,
+        specialization: data.specialty || null,
+        status: "active",
+        role: "teacher",
+        createdAt: new Date().toISOString(),
+      }
 
-      const userId = newUser?.[0]?.id
-      if (!userId) throw new Error("Failed to create user")
-
-      // Then create teacher record
-      const { error: teacherError } = await supabase
-        .from("teachers")
-        .insert([
-          {
-            user_id: userId,
-            department: data.department,
-            specialization: data.specialty || null,
-          },
-        ])
-
-      if (teacherError) throw teacherError
+      // Save to localStorage
+      userStorage.saveTeachers([...teachers, newTeacher])
+      
+      return newTeacher
     } catch (error) {
       console.error("Teacher registration error:", error)
       throw error
@@ -201,36 +188,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerAdmin = async (data: any) => {
     setIsLoading(true)
     try {
-      // First create user in users table
-      const { data: newUser, error: userError } = await supabase
-        .from("users")
-        .insert([
-          {
-            email: data.email,
-            password_hash: data.password,
-            full_name: `${data.firstName} ${data.lastName}`,
-            role: "admin",
-            status: "active",
-          },
-        ])
-        .select()
+      // Check if email already exists
+      const admins = userStorage.getAdmins()
+      if (admins.some((a: any) => a.email === data.email)) {
+        throw new Error("Email already registered")
+      }
 
-      if (userError) throw userError
+      // Create new admin record
+      const newAdmin = {
+        id: `admin_${Date.now()}`,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: "super_admin",
+        permissionLevel: "full_access",
+        status: "active",
+        createdAt: new Date().toISOString(),
+      }
 
-      const userId = newUser?.[0]?.id
-      if (!userId) throw new Error("Failed to create user")
-
-      // Then create admin record
-      const { error: adminError } = await supabase
-        .from("admins")
-        .insert([
-          {
-            user_id: userId,
-            permission_level: "full_access",
-          },
-        ])
-
-      if (adminError) throw adminError
+      // Save to localStorage
+      userStorage.saveAdmins([...admins, newAdmin])
+      
+      return newAdmin
     } catch (error) {
       console.error("Admin registration error:", error)
       throw error
