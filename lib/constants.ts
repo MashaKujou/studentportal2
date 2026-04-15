@@ -17,14 +17,7 @@ export const DIPLOMA_YEARS = ["1", "2", "3"] as const
 
 export const BACHELOR_YEARS = ["1", "2", "3", "4"] as const
 
-// Year-based diploma course filtering
-export const DIPLOMA_COURSES_BY_YEAR = {
-  "1": ["DIT", "DIC"],
-  "2": ["DIT", "DIC"],
-  "3": ["DHRT", "DHRT (SCHOLAR)", "DHRT (PAYEE)"],
-} as const
-
-export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DIC", "DHRT", "DHRT (SCHOLAR)", "DHRT (PAYEE)"] as const
+export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DHRT", "DHRT (SCHOLAR)"] as const
 
 export const DEFAULT_BACHELOR_COURSES = ["BTVTED", "BSMA", "BSE"] as const
 
