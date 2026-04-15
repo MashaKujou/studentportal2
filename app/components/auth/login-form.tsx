@@ -37,6 +37,12 @@ export const LoginForm = () => {
     try {
       const user = await login(email, password)
 
+      // Check if student is pending approval
+      if (user.role === "student" && user.status === "pending") {
+        router.push("/pending-approval")
+        return
+      }
+
       // Redirect based on user role
       if (user.role === "super_admin" || user.role === "admin") {
         router.push("/admin/dashboard")

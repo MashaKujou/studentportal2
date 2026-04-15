@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { userStorage } from "@/lib/storage"
+import { storage } from "@/lib/storage"
 import { useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 
@@ -19,7 +20,9 @@ export const PendingRegistrations = () => {
     const studentIndex = students.findIndex((s: any) => s.id === studentId)
     if (studentIndex !== -1) {
       students[studentIndex].status = "approved"
-      userStorage.saveStudents(students)
+      students[studentIndex].approvedAt = new Date().toISOString()
+      students[studentIndex].approvedBy = "admin"
+      storage.set("students", students)
       setRefreshKey((k) => k + 1)
     }
   }
@@ -29,7 +32,7 @@ export const PendingRegistrations = () => {
     const studentIndex = students.findIndex((s: any) => s.id === studentId)
     if (studentIndex !== -1) {
       students[studentIndex].status = "rejected"
-      userStorage.saveStudents(students)
+      storage.set("students", students)
       setRefreshKey((k) => k + 1)
     }
   }
