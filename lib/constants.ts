@@ -17,11 +17,11 @@ export const DIPLOMA_YEARS = ["1", "2", "3"] as const
 
 export const BACHELOR_YEARS = ["1", "2", "3", "4"] as const
 
-export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DIC"] as const
+export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DIC", "DHRT (SCHOLAR)", "DHRT (PAYEE)"] as const
 
-export const DEFAULT_BACHELOR_COURSES = ["BTVTED", "BSMA"] as const
+export const DEFAULT_BACHELOR_COURSES = ["BTVTED", "BSMA", "BSE"] as const
 
-export const SENIOR_HIGH_STRANDS = ["STEM", "ABM", "HUMSS", "GAS", "HE", "ICT", "Sports", "Arts and Design"] as const
+export const SENIOR_HIGH_STRANDS = ["HE", "ICT", "ABM", "GAS", "HUMSS"] as const
 
 export const STUDENT_STATUS = {
   PENDING: "pending",
