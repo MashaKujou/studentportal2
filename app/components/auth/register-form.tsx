@@ -31,6 +31,7 @@ export const RegisterForm = () => {
     password: "",
     confirmPassword: "",
     firstName: "",
+    middleName: "",
     lastName: "",
     studentId: "",
     grade: "",
@@ -69,6 +70,7 @@ export const RegisterForm = () => {
       password: formData.password,
       confirmPassword: formData.confirmPassword,
       firstName: formData.firstName,
+      middleName: formData.middleName,
       lastName: formData.lastName,
     })
 
@@ -106,6 +108,7 @@ export const RegisterForm = () => {
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
+        middleName: formData.middleName,
         lastName: formData.lastName,
         studentId: formData.studentId,
         academicLevel,
@@ -163,7 +166,7 @@ export const RegisterForm = () => {
           </div>
 
           {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium mb-2">
                 First Name
@@ -177,6 +180,20 @@ export const RegisterForm = () => {
                 disabled={isLoading}
               />
               {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
+            </div>
+            <div>
+              <label htmlFor="middleName" className="block text-sm font-medium mb-2">
+                Middle Name
+              </label>
+              <Input
+                id="middleName"
+                name="middleName"
+                placeholder="Middle name"
+                value={formData.middleName}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {errors.middleName && <p className="text-xs text-destructive mt-1">{errors.middleName}</p>}
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium mb-2">
