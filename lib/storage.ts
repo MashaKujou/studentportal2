@@ -285,8 +285,8 @@ export const collegeCoursesStorage = {
   getAll: (): { diplomaCourses: string[]; bachelorCourses: string[] } => {
     return (
       storage.get("college_courses") || {
-        diplomaCourses: ["DIT", "DIC"],
-        bachelorCourses: ["BTVTED", "BSMA"],
+        diplomaCourses: ["DIT", "DHRT", "DHRT (SCHOLAR)"],
+        bachelorCourses: ["BTVTED", "BSMA", "BSE"],
       }
     )
   },
