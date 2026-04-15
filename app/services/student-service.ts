@@ -1,12 +1,3 @@
-'use server'
-
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export interface Grade {
   id: string
   studentId: string
@@ -21,7 +12,7 @@ export interface Attendance {
   id: string
   studentId: string
   date: string
-  status: 'present' | 'absent' | 'late' | 'excused'
+  status: "present" | "absent" | "late" | "excused"
   subject: string
   createdAt: string
 }
@@ -30,7 +21,7 @@ export interface Request {
   id: string
   studentId: string
   type: string
-  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'read' | 'in_progress'
+  status: "pending" | "approved" | "rejected" | "completed" | "read" | "in_progress"
   reason: string
   createdAt: string
   completedAt?: string
@@ -56,132 +47,136 @@ export interface Document {
   uploadedAt: string
 }
 
+// 🔧 Helper to safely get data
+const getData = (key: string) => {
+  const data = localStorage.getItem(key)
+  return data ? JSON.parse(data) : []
+}
+
+// 🔧 Helper to save data
+const setData = (key: string, value: any) => {
+  localStorage.setItem(key, JSON.stringify(value))
+}
+
 export const studentService = {
-  // Grade operations
-  getGrades: async (studentId: string): Promise<Grade[]> => {
-    const { data, error } = await supabase
-      .from('grades')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching grades:', error)
-      return []
-    }
-    return data || []
+  // =========================
+  // 📊 GRADES
+  // =========================
+  getGrades: (studentId: string): Grade[] => {
+    const grades = getData("grades")
+    return grades.filter((g: Grade) => g.studentId === studentId)
   },
 
-  // Attendance operations
-  getAttendance: async (studentId: string): Promise<Attendance[]> => {
-    const { data, error } = await supabase
-      .from('attendance')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('date', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching attendance:', error)
-      return []
-    }
-    return data || []
+  addGrade: (grade: Grade) => {
+    const grades = getData("grades")
+    grades.push(grade)
+    setData("grades", grades)
   },
 
-  // Request operations
-  getRequests: async (studentId: string): Promise<Request[]> => {
-    const { data, error } = await supabase
-      .from('requests')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching requests:', error)
-      return []
-    }
-    return data || []
+  // =========================
+  // 📅 ATTENDANCE
+  // =========================
+  getAttendance: (studentId: string): Attendance[] => {
+    const attendance = getData("attendance")
+    return attendance.filter((a: Attendance) => a.studentId === studentId)
   },
 
-  createRequest: async (request: Omit<Request, 'id' | 'createdAt'>): Promise<Request | null> => {
-    const { data, error } = await supabase
-      .from('requests')
-      .insert([request])
-      .select()
-
-    if (error) {
-      console.error('Error creating request:', error)
-      return null
-    }
-    return data?.[0] || null
+  addAttendance: (attendanceRecord: Attendance) => {
+    const attendance = getData("attendance")
+    attendance.push(attendanceRecord)
+    setData("attendance", attendance)
   },
 
-  // Schedule operations
-  getSchedule: async (studentId: string): Promise<Schedule[]> => {
-    const { data, error } = await supabase
-      .from('schedules')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      console.error('Error fetching schedule:', error)
-      return []
-    }
-    return data || []
+  // =========================
+  // 📝 REQUESTS
+  // =========================
+  getRequests: (studentId: string): Request[] => {
+    const requests = getData("requests")
+    return requests.filter((r: Request) => r.studentId === studentId)
   },
 
-  // Document operations
-  getDocuments: async (studentId: string): Promise<Document[]> => {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('uploaded_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching documents:', error)
-      return []
-    }
-    return data || []
+  createRequest: (request: Request) => {
+    const requests = getData("requests")
+    requests.push(request)
+    setData("requests", requests)
   },
 
-  uploadDocument: async (document: Omit<Document, 'id' | 'uploadedAt'>): Promise<Document | null> => {
-    const { data, error } = await supabase
-      .from('documents')
-      .insert([document])
-      .select()
+  updateRequestStatus: (requestId: string, status: Request["status"]) => {
+    const requests = getData("requests")
 
-    if (error) {
-      console.error('Error uploading document:', error)
-      return null
-    }
-    return data?.[0] || null
+    const updated = requests.map((r: Request) => {
+      if (r.id === requestId) {
+        return {
+          ...r,
+          status,
+          completedAt: status === "completed" ? new Date().toISOString() : r.completedAt,
+        }
+      }
+      return r
+    })
+
+    setData("requests", updated)
   },
 
-  deleteDocument: async (documentId: string): Promise<boolean> => {
-    const { error } = await supabase
-      .from('documents')
-      .delete()
-      .eq('id', documentId)
-
-    if (error) {
-      console.error('Error deleting document:', error)
-      return false
-    }
-    return true
+  // =========================
+  // 📚 SCHEDULE
+  // =========================
+  getSchedule: (studentId: string): Schedule[] => {
+    const schedules = getData("schedules")
+    return schedules.filter((s: Schedule) => s.studentId === studentId)
   },
 
-  // Student profile operations
-  updateStudentProfile: (studentId: string, updates: { profilePicture?: string; password?: string }): void => {
-    userStorage.updateStudent(studentId, {
-      profilePicture: updates.profilePicture,
-      lastPasswordChange: updates.password ? new Date().toISOString() : undefined,
-      password: updates.password || undefined,
-    } as any)
+  addSchedule: (schedule: Schedule) => {
+    const schedules = getData("schedules")
+    schedules.push(schedule)
+    setData("schedules", schedules)
   },
 
+  // =========================
+  // 📂 DOCUMENTS
+  // =========================
+  getDocuments: (studentId: string): Document[] => {
+    const documents = getData("documents")
+    return documents.filter((d: Document) => d.studentId === studentId)
+  },
+
+  uploadDocument: (document: Document) => {
+    const documents = getData("documents")
+    documents.push(document)
+    setData("documents", documents)
+  },
+
+  deleteDocument: (documentId: string) => {
+    const documents = getData("documents")
+    const filtered = documents.filter((d: Document) => d.id !== documentId)
+    setData("documents", filtered)
+  },
+
+  // =========================
+  // 👤 PROFILE (LOCAL ONLY)
+  // =========================
   getStudentProfile: (studentId: string) => {
-    const students = userStorage.getStudents()
-    return students.find((s) => s.id === studentId)
+    const students = getData("students")
+    return students.find((s: any) => s.id === studentId)
+  },
+
+  updateStudentProfile: (
+    studentId: string,
+    updates: { profilePicture?: string; password?: string }
+  ) => {
+    const students = getData("students")
+
+    const updated = students.map((s: any) => {
+      if (s.id === studentId) {
+        return {
+          ...s,
+          ...updates,
+          lastPasswordChange: updates.password ? new Date().toISOString() : s.lastPasswordChange,
+        }
+      }
+      return s
+    })
+
+    setData("students", updated)
   },
 }
