@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { userStorage } from "@/lib/storage"
-import { storage } from "@/lib/storage"
 import { useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 
@@ -16,24 +15,26 @@ export const PendingRegistrations = () => {
   }, [refreshKey])
 
   const handleApprove = (studentId: string) => {
-    const students = userStorage.getStudents()
-    const studentIndex = students.findIndex((s: any) => s.id === studentId)
-    if (studentIndex !== -1) {
-      students[studentIndex].status = "approved"
-      students[studentIndex].approvedAt = new Date().toISOString()
-      students[studentIndex].approvedBy = "admin"
-      storage.set("students", students)
+    try {
+      userStorage.updateStudent(studentId, {
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        approvedBy: "admin",
+      } as any)
       setRefreshKey((k) => k + 1)
+    } catch (error) {
+      console.error("Error approving student:", error)
     }
   }
 
   const handleReject = (studentId: string) => {
-    const students = userStorage.getStudents()
-    const studentIndex = students.findIndex((s: any) => s.id === studentId)
-    if (studentIndex !== -1) {
-      students[studentIndex].status = "rejected"
-      storage.set("students", students)
+    try {
+      userStorage.updateStudent(studentId, {
+        status: "rejected",
+      } as any)
       setRefreshKey((k) => k + 1)
+    } catch (error) {
+      console.error("Error rejecting student:", error)
     }
   }
 
