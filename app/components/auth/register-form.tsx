@@ -1,8 +1,6 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,9 +21,13 @@ import { collegeCoursesStorage } from "@/lib/storage"
 export const RegisterForm = () => {
   const router = useRouter()
   const { registerStudent } = useAuth()
-  const [academicLevel, setAcademicLevel] = useState<"senior_high" | "diploma" | "bachelor">("senior_high")
+
+  const [academicLevel, setAcademicLevel] =
+    useState<"senior_high" | "diploma" | "bachelor">("senior_high")
+
   const [diplomaCourses, setDiplomaCourses] = useState<string[]>(DEFAULT_DIPLOMA_COURSES)
   const [bachelorCourses, setBachelorCourses] = useState<string[]>(DEFAULT_BACHELOR_COURSES)
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -39,19 +41,51 @@ export const RegisterForm = () => {
     year: "",
     course: "",
   })
+
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
 
-  // Load college courses on mount
   React.useEffect(() => {
     const courses = collegeCoursesStorage.getAll()
     setDiplomaCourses(courses.diplomaCourses)
     setBachelorCourses(courses.bachelorCourses)
   }, [])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // ---------------- HANDLE CHANGE ----------------
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
+
+    // ✅ AUTO FORMAT STUDENT ID (####-##-###)
+    if (name === "studentId") {
+      let digits = value.replace(/\D/g, "") // remove non-numbers
+
+      if (digits.length > 9) {
+        digits = digits.slice(0, 9)
+      }
+
+      let formatted = digits
+
+      if (digits.length > 4) {
+        formatted = digits.slice(0, 4) + "-" + digits.slice(4)
+      }
+
+      if (digits.length > 6) {
+        formatted =
+          digits.slice(0, 4) +
+          "-" +
+          digits.slice(4, 6) +
+          "-" +
+          digits.slice(6)
+      }
+
+      setFormData((prev) => ({ ...prev, studentId: formatted }))
+      return
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }))
+
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev }
@@ -61,6 +95,48 @@ export const RegisterForm = () => {
     }
   }
 
+  // ---------------- VALIDATORS ----------------
+  const nameRegex = /^[A-Za-z\s]+$/
+  const studentIdRegex = /^\d{4}-\d{2}-\d{3}$/
+  const emailRegex = /^[A-Za-z0-9@._!]+$/
+
+  const validateNames = () => {
+    if (formData.firstName && !nameRegex.test(formData.firstName)) {
+      return "First Name must not contain numbers or symbols"
+    }
+    if (formData.middleName && !nameRegex.test(formData.middleName)) {
+      return "Middle Name must not contain numbers or symbols"
+    }
+    if (formData.lastName && !nameRegex.test(formData.lastName)) {
+      return "Last Name must not contain numbers or symbols"
+    }
+    return null
+  }
+
+  const validateStudentId = () => {
+    if (!studentIdRegex.test(formData.studentId)) {
+      return "Student ID must follow format ####-##-###"
+    }
+    return null
+  }
+
+  const validateEmailFormat = () => {
+    if (!emailRegex.test(formData.email)) {
+      return "Email contains invalid characters (no quotes or commas allowed)"
+    }
+
+    if (
+      formData.email.includes('"') ||
+      formData.email.includes("'") ||
+      formData.email.includes(",")
+    ) {
+      return "Email cannot contain quotes or commas"
+    }
+
+    return null
+  }
+
+  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
@@ -79,12 +155,29 @@ export const RegisterForm = () => {
       return
     }
 
+    const nameError = validateNames()
+    if (nameError) {
+      setErrors({ form: nameError })
+      return
+    }
+
+    const studentIdError = validateStudentId()
+    if (studentIdError) {
+      setErrors({ form: studentIdError })
+      return
+    }
+
+    const emailError = validateEmailFormat()
+    if (emailError) {
+      setErrors({ form: emailError })
+      return
+    }
+
     if (!formData.studentId) {
       setErrors({ form: "Student ID is required" })
       return
     }
 
-    // Validate academic level specific fields
     if (academicLevel === "senior_high") {
       if (!formData.grade || !formData.strand) {
         setErrors({ form: "Grade and Strand are required for Senior High" })
@@ -120,24 +213,24 @@ export const RegisterForm = () => {
 
       router.push("/pending-approval")
     } catch (err) {
-      setErrors({ form: err instanceof Error ? err.message : "Registration failed" })
+      setErrors({
+        form: err instanceof Error ? err.message : "Registration failed",
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
   const getYearOptions = () => {
-    if (academicLevel === "diploma") {
-      return DIPLOMA_YEARS
-    }
-    return BACHELOR_YEARS
+    return academicLevel === "diploma"
+      ? DIPLOMA_YEARS
+      : BACHELOR_YEARS
   }
 
   const getCourseOptions = () => {
-    if (academicLevel === "diploma") {
-      return diplomaCourses
-    }
-    return bachelorCourses
+    return academicLevel === "diploma"
+      ? diplomaCourses
+      : bachelorCourses
   }
 
   return (
@@ -146,18 +239,19 @@ export const RegisterForm = () => {
         <CardTitle>Student Registration</CardTitle>
         <CardDescription>Create a new student account</CardDescription>
       </CardHeader>
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
-          {/* Academic Level Selection */}
+
+          {/* Academic Level */}
           <div>
-            <label htmlFor="academicLevel" className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2">
               Choose Academic Level
             </label>
             <select
-              id="academicLevel"
               value={academicLevel}
               onChange={(e) => setAcademicLevel(e.target.value as any)}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background"
+              className="w-full px-3 py-2 border rounded-md"
             >
               <option value="senior_high">Senior High School</option>
               <option value="diploma">Diploma (College - 3 Years)</option>
@@ -165,225 +259,74 @@ export const RegisterForm = () => {
             </select>
           </div>
 
-          {/* Basic Information */}
+          {/* Names */}
           <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium mb-2">
-                First Name
-              </label>
-              <Input
-                id="firstName"
-                name="firstName"
-                placeholder="First name"
-                value={formData.firstName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-              {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
-            </div>
-            <div>
-              <label htmlFor="middleName" className="block text-sm font-medium mb-2">
-                Middle Name
-              </label>
-              <Input
-                id="middleName"
-                name="middleName"
-                placeholder="Middle name"
-                value={formData.middleName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-              {errors.middleName && <p className="text-xs text-destructive mt-1">{errors.middleName}</p>}
-            </div>
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium mb-2">
-                Last Name
-              </label>
-              <Input
-                id="lastName"
-                name="lastName"
-                placeholder="Last name"
-                value={formData.lastName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-              {errors.lastName && <p className="text-xs text-destructive mt-1">{errors.lastName}</p>}
-            </div>
+            <Input name="firstName" placeholder="First Name" onChange={handleChange} />
+            <Input name="middleName" placeholder="Middle Name" onChange={handleChange} />
+            <Input name="lastName" placeholder="Last Name" onChange={handleChange} />
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Email address"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
-          </div>
+          <Input name="email" placeholder="Email" onChange={handleChange} />
+          <Input name="password" type="password" placeholder="Password" onChange={handleChange} />
+          <Input name="confirmPassword" type="password" placeholder="Confirm Password" onChange={handleChange} />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
-              Password
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
-          </div>
+          {/* Student ID (AUTO FORMAT) */}
+          <Input
+            name="studentId"
+            placeholder="1234-56-789"
+            value={formData.studentId}
+            onChange={handleChange}
+            maxLength={11}
+          />
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-              Confirm Password
-            </label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
-          </div>
-
-          <div>
-            <label htmlFor="studentId" className="block text-sm font-medium mb-2">
-              Student ID
-            </label>
-            <Input
-              id="studentId"
-              name="studentId"
-              placeholder="Student ID"
-              value={formData.studentId}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Senior High School Fields */}
+          {/* Senior High */}
           {academicLevel === "senior_high" && (
             <>
-              <div>
-                <label htmlFor="grade" className="block text-sm font-medium mb-2">
-                  Grade Level
-                </label>
-                <select
-                  id="grade"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  disabled={isLoading}
-                >
-                  <option value="">Select Grade</option>
-                  {SENIOR_HIGH_GRADES.map((grade) => (
-                    <option key={grade} value={grade}>
-                      Grade {grade}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="strand" className="block text-sm font-medium mb-2">
-                  Strand
-                </label>
-                <select
-                  id="strand"
-                  name="strand"
-                  value={formData.strand}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  disabled={isLoading}
-                >
-                  <option value="">Select Strand</option>
-                  {SENIOR_HIGH_STRANDS.map((strand) => (
-                    <option key={strand} value={strand}>
-                      {strand}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select name="grade" onChange={handleChange}>
+                <option value="">Select Grade</option>
+                {SENIOR_HIGH_GRADES.map((g) => (
+                  <option key={g} value={g}>Grade {g}</option>
+                ))}
+              </select>
+
+              <select name="strand" onChange={handleChange}>
+                <option value="">Select Strand</option>
+                {SENIOR_HIGH_STRANDS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </>
           )}
 
-          {/* College Fields (Diploma or Bachelor) */}
+          {/* College */}
           {(academicLevel === "diploma" || academicLevel === "bachelor") && (
             <>
-              <div>
-                <label htmlFor="year" className="block text-sm font-medium mb-2">
-                  Year Level
-                </label>
-                <select
-                  id="year"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  disabled={isLoading}
-                >
-                  <option value="">Select Year</option>
-                  {getYearOptions().map((year) => (
-                    <option key={year} value={year}>
-                      Year {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="course" className="block text-sm font-medium mb-2">
-                  Course
-                </label>
-                <select
-                  id="course"
-                  name="course"
-                  value={formData.course}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  disabled={isLoading}
-                >
-                  <option value="">Select Course</option>
-                  {getCourseOptions().map((course) => (
-                    <option key={course} value={course}>
-                      {course}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select name="year" onChange={handleChange}>
+                <option value="">Select Year</option>
+                {getYearOptions().map((y) => (
+                  <option key={y} value={y}>Year {y}</option>
+                ))}
+              </select>
+
+              <select name="course" onChange={handleChange}>
+                <option value="">Select Course</option>
+                {getCourseOptions().map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </>
           )}
 
           {errors.form && (
-            <div className="p-3 bg-destructive/10 border border-destructive text-destructive rounded-md text-sm">
-              {errors.form}
-            </div>
+            <p className="text-red-500 text-sm">{errors.form}</p>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full h-11 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled={isLoading}
-          >
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? "Registering..." : "Register"}
           </Button>
 
           <p className="text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Login here
-            </Link>
+            Already have an account? <Link href="/login">Login</Link>
           </p>
         </form>
       </CardContent>
