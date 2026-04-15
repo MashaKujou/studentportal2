@@ -17,7 +17,7 @@ export const DIPLOMA_YEARS = ["1", "2", "3"] as const
 
 export const BACHELOR_YEARS = ["1", "2", "3", "4"] as const
 
-export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DHRT"] as const
+export const DEFAULT_DIPLOMA_COURSES = ["DIT", "DHRT", "DHRT (SCHOLAR)"] as const
 
 export const DEFAULT_BACHELOR_COURSES = ["BTVTED", "BSMA", "BSE"] as const
 
