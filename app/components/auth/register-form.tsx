@@ -25,8 +25,8 @@ export const RegisterForm = () => {
   const [academicLevel, setAcademicLevel] =
     useState<"senior_high" | "diploma" | "bachelor">("senior_high")
 
-  const [diplomaCourses, setDiplomaCourses] = useState<string[]>(DEFAULT_DIPLOMA_COURSES)
-  const [bachelorCourses, setBachelorCourses] = useState<string[]>(DEFAULT_BACHELOR_COURSES)
+  const [diplomaCourses, setDiplomaCourses] = useState<string[]>([])
+  const [bachelorCourses, setBachelorCourses] = useState<string[]>([])
 
   const [formData, setFormData] = useState({
     email: "",
@@ -96,7 +96,7 @@ export const RegisterForm = () => {
   }
 
   // ---------------- VALIDATORS ----------------
-  const nameRegex = /^[A-Za-z\s]+$/
+  const nameRegex = /^[A-Za-z]+(?:[\s-][A-Za-z]+)*$/
   const studentIdRegex = /^\d{4}-\d{2}-\d{3}$/
   const emailRegex = /^[A-Za-z0-9@._!]+$/
 
