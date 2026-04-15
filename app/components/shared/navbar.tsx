@@ -38,14 +38,14 @@ export const Navbar: React.FC<{ title?: string }> = ({ title = "Student Portal" 
                 className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/80"
               >
                 <User className="w-5 h-5" />
-                <span className="text-sm">{user.firstName}</span>
+                <span className="text-sm">{user.firstName} {user.middleName ? `${user.middleName.charAt(0)}.` : ""} {user.lastName}</span>
               </button>
 
               {showMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-background text-foreground rounded-lg shadow-lg border border-border">
                   <div className="p-4 border-b border-border">
                     <p className="font-semibold text-sm">
-                      {user.firstName} {user.lastName}
+                      {user.firstName} {user.middleName ? `${user.middleName} ` : ""}{user.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
