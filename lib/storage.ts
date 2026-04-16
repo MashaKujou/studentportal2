@@ -167,6 +167,19 @@ export interface Grade {
   createdAt: string
 }
 
+export interface FinancialFeeAssignment {
+  id: string
+  title: string
+  description?: string
+  academicLevel: "senior_high" | "diploma" | "bachelor"
+  targetName: string
+  targetType: "strand" | "course"
+  gradeOrYear: string
+  amount: number
+  dueDate?: string
+  createdAt: string
+}
+
 export const userStorage = {
   getStudents: (): Student[] => {
     return storage.get<Student[]>(STORAGE_KEYS.STUDENTS) || []
@@ -455,5 +468,72 @@ export const gradesStorage = {
       STORAGE_KEYS.GRADES,
       grades.filter((g) => g.id !== id),
     )
+  },
+}
+
+const matchesFeeAssignment = (student: Student, assignment: FinancialFeeAssignment): boolean => {
+  if (student.status !== "approved") {
+    return false
+  }
+
+  if (student.academicLevel !== assignment.academicLevel) {
+    return false
+  }
+
+  if (assignment.academicLevel === "senior_high") {
+    return student.grade === assignment.gradeOrYear && student.strand === assignment.targetName
+  }
+
+  return student.year === assignment.gradeOrYear && student.course === assignment.targetName
+}
+
+export const financialStorage = {
+  getAll: (): FinancialFeeAssignment[] => {
+    return storage.get<FinancialFeeAssignment[]>(STORAGE_KEYS.FINANCIAL_RECORDS) || []
+  },
+
+  add: (assignment: Omit<FinancialFeeAssignment, "id" | "createdAt">): FinancialFeeAssignment => {
+    const newAssignment: FinancialFeeAssignment = {
+      ...assignment,
+      id: generateId("FEE"),
+      createdAt: new Date().toISOString(),
+    }
+
+    const assignments = financialStorage.getAll()
+    assignments.push(newAssignment)
+    storage.set(STORAGE_KEYS.FINANCIAL_RECORDS, assignments)
+    return newAssignment
+  },
+
+  update: (id: string, updates: Partial<FinancialFeeAssignment>): void => {
+    const assignments = financialStorage.getAll()
+    const index = assignments.findIndex((assignment) => assignment.id === id)
+
+    if (index !== -1) {
+      assignments[index] = { ...assignments[index], ...updates }
+      storage.set(STORAGE_KEYS.FINANCIAL_RECORDS, assignments)
+    }
+  },
+
+  delete: (id: string): void => {
+    const assignments = financialStorage.getAll()
+    storage.set(
+      STORAGE_KEYS.FINANCIAL_RECORDS,
+      assignments.filter((assignment) => assignment.id !== id),
+    )
+  },
+
+  getByStudentId: (studentId: string): FinancialFeeAssignment[] => {
+    const student = userStorage.getStudents().find((item) => item.id === studentId)
+
+    if (!student) {
+      return []
+    }
+
+    return financialStorage.getAll().filter((assignment) => matchesFeeAssignment(student, assignment))
+  },
+
+  getStudentsForAssignment: (assignment: FinancialFeeAssignment): Student[] => {
+    return userStorage.getStudents().filter((student) => matchesFeeAssignment(student, assignment))
   },
 }

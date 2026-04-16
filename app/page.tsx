@@ -49,7 +49,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/login">
-                <Button className="h-9 px-4 font-medium text-foreground hover:bg-muted transition-colors">Login</Button>
+                <Button className="h-9 px-4 font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">Login</Button>
               </Link>
               <Link href="/register">
                 <Button className="h-9 px-4 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md">Join us!</Button>

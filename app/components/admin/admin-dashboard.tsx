@@ -15,6 +15,7 @@ import {
   MessageCircle,
   BarChart3,
   Settings,
+  DollarSign,
 } from "lucide-react"
 
 interface AdminDashboardProps {
@@ -30,6 +31,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
     { label: "Users", href: "/admin/user-management", icon: <Users className="w-5 h-5" /> },
     { label: "Classes", href: "/admin/classes", icon: <BookOpen className="w-5 h-5" /> },
     { label: "Grades", href: "/admin/grade-approval", icon: <CheckCircle className="w-5 h-5" /> },
+    { label: "Financial", href: "/admin/financial", icon: <DollarSign className="w-5 h-5" /> },
     { label: "Requests", href: "/admin/requests", icon: <MessageCircle className="w-5 h-5" /> },
     { label: "Messages", href: "/admin/messages", icon: <MessageCircle className="w-5 h-5" /> },
     { label: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="w-5 h-5" /> },

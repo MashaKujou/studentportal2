@@ -2,14 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { userStorage } from "@/lib/storage"
-
-// Use anon key for normal operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 type User = any & { role: string }
 
@@ -34,13 +27,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const storedUser = sessionStorage.getItem("auth_user")
+        const storedUser = localStorage.getItem("auth_user")
         if (storedUser) {
           setUser(JSON.parse(storedUser))
         }
       } catch (error) {
         console.error("Failed to parse stored user:", error)
-        sessionStorage.removeItem("auth_user")
+        localStorage.removeItem("auth_user")
       } finally {
         setIsLoading(false)
       }
@@ -88,13 +81,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid email or password")
       }
 
-      // Store user with role in sessionStorage
+      // Store user with role in localStorage
       const userToStore = {
         ...foundUser,
         role: role,
       }
 
-      sessionStorage.setItem("auth_user", JSON.stringify(userToStore))
+      localStorage.setItem("auth_user", JSON.stringify(userToStore))
       setUser(userToStore)
       
       return userToStore
@@ -108,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null)
-    sessionStorage.removeItem("auth_user")
+    localStorage.removeItem("auth_user")
   }
 
   const registerStudent = async (data: any) => {
