@@ -1,3 +1,29 @@
+
+// ============== Title constants
+export const NAVBAR_CONFIG = {
+  USE_DYNAMIC_NAME: false,
+  SCHOOL_NAME: "Saint Amatiel College",
+} as const
+
+export const getNavbarTitle = (user?: { firstName?: string; role?: string }) => {
+  if (
+    NAVBAR_CONFIG.USE_DYNAMIC_NAME &&
+    user?.firstName &&
+    user?.role
+  ) {
+    const role =
+      user.role.charAt(0).toUpperCase() + user.role.slice(1)
+
+    return `${role} - ${user.firstName}`
+  }
+
+  return NAVBAR_CONFIG.SCHOOL_NAME
+}
+
+
+// ==============
+
+
 // School constants and static configurations
 export const ROLES = {
   STUDENT: "student",

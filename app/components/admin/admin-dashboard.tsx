@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/app/components/shared/protected-route"
 import { Navbar } from "@/app/components/shared/navbar"
 import { BottomNav } from "@/app/components/shared/bottom-nav"
 import { useAuth } from "@/app/contexts/auth-context"
+import { getNavbarTitle } from "@/lib/constants"
 import {
   LayoutDashboard,
   Clock,
@@ -40,7 +41,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
 
   return (
     <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-      <Navbar title={`Admin - ${user?.firstName}`} />
+      <Navbar title={getNavbarTitle(user)} />
       <div className="flex flex-col min-h-screen bg-background">
         <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
         <BottomNav items={navItems} />
