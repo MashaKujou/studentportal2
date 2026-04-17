@@ -180,6 +180,15 @@ export interface FinancialFeeAssignment {
   createdAt: string
 }
 
+export type FinancialPaymentStatus = "paid" | "not_paid"
+
+export interface FinancialStudentPaymentStatus {
+  assignmentId: string
+  studentId: string
+  status: FinancialPaymentStatus
+  updatedAt: string
+}
+
 export const userStorage = {
   getStudents: (): Student[] => {
     return storage.get<Student[]>(STORAGE_KEYS.STUDENTS) || []
@@ -488,6 +497,10 @@ const matchesFeeAssignment = (student: Student, assignment: FinancialFeeAssignme
 }
 
 export const financialStorage = {
+  getAllPaymentStatuses: (): FinancialStudentPaymentStatus[] => {
+    return storage.get<FinancialStudentPaymentStatus[]>(STORAGE_KEYS.FINANCIAL_PAYMENT_STATUSES) || []
+  },
+
   getAll: (): FinancialFeeAssignment[] => {
     return storage.get<FinancialFeeAssignment[]>(STORAGE_KEYS.FINANCIAL_RECORDS) || []
   },
@@ -517,9 +530,14 @@ export const financialStorage = {
 
   delete: (id: string): void => {
     const assignments = financialStorage.getAll()
+    const statuses = financialStorage.getAllPaymentStatuses()
     storage.set(
       STORAGE_KEYS.FINANCIAL_RECORDS,
       assignments.filter((assignment) => assignment.id !== id),
+    )
+    storage.set(
+      STORAGE_KEYS.FINANCIAL_PAYMENT_STATUSES,
+      statuses.filter((item) => item.assignmentId !== id),
     )
   },
 
@@ -535,5 +553,56 @@ export const financialStorage = {
 
   getStudentsForAssignment: (assignment: FinancialFeeAssignment): Student[] => {
     return userStorage.getStudents().filter((student) => matchesFeeAssignment(student, assignment))
+  },
+
+  getStudentPaymentStatus: (assignmentId: string, studentId: string): FinancialPaymentStatus => {
+    const statuses = financialStorage.getAllPaymentStatuses()
+    const item = statuses.find((entry) => entry.assignmentId === assignmentId && entry.studentId === studentId)
+    return item?.status || "not_paid"
+  },
+
+  updateStudentPaymentStatus: (assignmentId: string, studentId: string, status: FinancialPaymentStatus): void => {
+    const statuses = financialStorage.getAllPaymentStatuses()
+    const index = statuses.findIndex((entry) => entry.assignmentId === assignmentId && entry.studentId === studentId)
+
+    if (index !== -1) {
+      statuses[index] = {
+        ...statuses[index],
+        status,
+        updatedAt: new Date().toISOString(),
+      }
+    } else {
+      statuses.push({
+        assignmentId,
+        studentId,
+        status,
+        updatedAt: new Date().toISOString(),
+      })
+    }
+
+    storage.set(STORAGE_KEYS.FINANCIAL_PAYMENT_STATUSES, statuses)
+  },
+
+  bulkUpdateStudentPaymentStatus: (assignmentId: string, studentIds: string[], status: FinancialPaymentStatus): void => {
+    const statuses = financialStorage.getAllPaymentStatuses()
+    const now = new Date().toISOString()
+    const studentIdSet = new Set(studentIds)
+    const updatedMap = new Map<string, FinancialStudentPaymentStatus>()
+
+    statuses.forEach((item) => {
+      const key = `${item.assignmentId}:${item.studentId}`
+      updatedMap.set(key, item)
+    })
+
+    studentIdSet.forEach((studentId) => {
+      updatedMap.set(`${assignmentId}:${studentId}`, {
+        assignmentId,
+        studentId,
+        status,
+        updatedAt: now,
+      })
+    })
+
+    storage.set(STORAGE_KEYS.FINANCIAL_PAYMENT_STATUSES, Array.from(updatedMap.values()))
   },
 }

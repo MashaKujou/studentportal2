@@ -203,6 +203,7 @@ export const STORAGE_KEYS = {
   SCHEDULES: "student_portal_schedules",
   DOCUMENTS: "student_portal_documents",
   FINANCIAL_RECORDS: "student_portal_financial_records",
+  FINANCIAL_PAYMENT_STATUSES: "student_portal_financial_payment_statuses",
   LIBRARY_CATALOG: "student_portal_library_catalog",
   LIBRARY_CHECKOUTS: "student_portal_library_checkouts",
   CAMPUS_RESOURCES: "student_portal_campus_resources",

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/app/contexts/auth-context"
-import { financialStorage, type FinancialFeeAssignment } from "@/lib/storage"
+import { financialStorage, type FinancialFeeAssignment, type FinancialPaymentStatus } from "@/lib/storage"
 import { ACADEMIC_LEVELS } from "@/lib/constants"
 
 type SortOption = "newest" | "oldest" | "amount_high" | "amount_low" | "name"
@@ -23,6 +23,10 @@ const getAssignmentGroup = (assignment: FinancialFeeAssignment) => {
   }
 
   return `${assignment.targetName} Year ${assignment.gradeOrYear}`
+}
+
+const getPaymentStatusLabel = (status: FinancialPaymentStatus) => {
+  return status === "paid" ? "Paid" : "Not Paid"
 }
 
 export const StudentFinancial = () => {
@@ -131,11 +135,20 @@ export const StudentFinancial = () => {
             </div>
           ) : (
             <div className="grid gap-4">
-              {financialItems.map((assignment) => (
+              {financialItems.map((assignment) => {
+                const paymentStatus = user?.id ? financialStorage.getStudentPaymentStatus(assignment.id, user.id) : "not_paid"
+
+                return (
                 <div key={assignment.id} className="rounded-lg border p-4 shadow-sm">
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                       <h2 className="text-lg font-semibold">{assignment.title}</h2>
+                      <p className="text-sm">
+                        <span className="font-medium">Status: </span>
+                        <span className={paymentStatus === "paid" ? "text-green-600" : "text-amber-600"}>
+                          {getPaymentStatusLabel(paymentStatus)}
+                        </span>
+                      </p>
                       <p className="text-sm text-muted-foreground">{assignment.description || "No additional notes provided."}</p>
                       <p className="text-sm text-muted-foreground">Assigned To: {getAssignmentGroup(assignment)}</p>
                       <p className="text-sm text-muted-foreground">
@@ -148,7 +161,7 @@ export const StudentFinancial = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </CardContent>

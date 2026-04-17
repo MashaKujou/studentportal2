@@ -6,7 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ACADEMIC_LEVELS, BACHELOR_YEARS, DIPLOMA_YEARS, SENIOR_HIGH_GRADES, SENIOR_HIGH_STRANDS } from "@/lib/constants"
-import { collegeCoursesStorage, financialStorage, type FinancialFeeAssignment, type Student } from "@/lib/storage"
+import {
+  collegeCoursesStorage,
+  financialStorage,
+  type FinancialFeeAssignment,
+  type FinancialPaymentStatus,
+  type Student,
+} from "@/lib/storage"
 
 type AssignmentFormState = {
   title: string
@@ -59,6 +65,8 @@ export const FinancialManagement = () => {
   const [selectedAssignment, setSelectedAssignment] = useState<FinancialFeeAssignment | null>(null)
   const [studentSearchQuery, setStudentSearchQuery] = useState("")
   const [studentSortBy, setStudentSortBy] = useState<StudentSortOption>("name_asc")
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
+  const [bulkStatus, setBulkStatus] = useState<FinancialPaymentStatus>("not_paid")
   const [formData, setFormData] = useState<AssignmentFormState>(INITIAL_FORM)
 
   const courseOptions = useMemo(() => collegeCoursesStorage.getAll(), [refreshKey])
@@ -165,6 +173,17 @@ export const FinancialManagement = () => {
     })
   }, [selectedAssignment, studentSearchQuery, studentSortBy])
 
+  const assignmentStudentsWithStatus = useMemo(() => {
+    if (!selectedAssignment) {
+      return []
+    }
+
+    return assignmentStudents.map((student) => ({
+      student,
+      paymentStatus: financialStorage.getStudentPaymentStatus(selectedAssignment.id, student.id),
+    }))
+  }, [assignmentStudents, refreshKey, selectedAssignment])
+
   const resetForm = () => {
     setFormData(INITIAL_FORM)
   }
@@ -219,6 +238,48 @@ export const FinancialManagement = () => {
       setSelectedAssignment(null)
       setStudentSearchQuery("")
     }
+  }
+
+  const handleStudentSelectionToggle = (studentId: string, isSelected: boolean) => {
+    setSelectedStudentIds((current) => {
+      if (isSelected) {
+        return current.includes(studentId) ? current : [...current, studentId]
+      }
+
+      return current.filter((id) => id !== studentId)
+    })
+  }
+
+  const handleToggleSelectAllStudents = (isSelected: boolean) => {
+    if (!isSelected) {
+      setSelectedStudentIds([])
+      return
+    }
+
+    setSelectedStudentIds(assignmentStudentsWithStatus.map((entry) => entry.student.id))
+  }
+
+  const handleSingleStatusChange = (studentId: string, status: FinancialPaymentStatus) => {
+    if (!selectedAssignment) {
+      return
+    }
+
+    financialStorage.updateStudentPaymentStatus(selectedAssignment.id, studentId, status)
+    setRefreshKey((current) => current + 1)
+  }
+
+  const handleBulkStatusUpdate = () => {
+    if (!selectedAssignment) {
+      return
+    }
+
+    if (selectedStudentIds.length === 0) {
+      alert("Select at least one student for bulk status update.")
+      return
+    }
+
+    financialStorage.bulkUpdateStudentPaymentStatus(selectedAssignment.id, selectedStudentIds, bulkStatus)
+    setRefreshKey((current) => current + 1)
   }
 
   return (
@@ -302,6 +363,8 @@ export const FinancialManagement = () => {
                             setSelectedAssignment(assignment)
                             setStudentSearchQuery("")
                             setStudentSortBy("name_asc")
+                            setSelectedStudentIds([])
+                            setBulkStatus("not_paid")
                           }}
                         >
                           View Students
@@ -421,7 +484,16 @@ export const FinancialManagement = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selectedAssignment} onOpenChange={(open) => !open && setSelectedAssignment(null)}>
+      <Dialog
+        open={!!selectedAssignment}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedAssignment(null)
+            setSelectedStudentIds([])
+            setBulkStatus("not_paid")
+          }
+        }}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -430,6 +502,26 @@ export const FinancialManagement = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/50 p-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Bulk Edit Payment Status</p>
+                  <p className="text-xs text-muted-foreground">Selected students: {selectedStudentIds.length}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={bulkStatus}
+                    onChange={(event) => setBulkStatus(event.target.value as FinancialPaymentStatus)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="paid">Paid</option>
+                    <option value="not_paid">Not Paid</option>
+                  </select>
+                  <Button onClick={handleBulkStatusUpdate}>Apply Bulk Status</Button>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
               <Input
                 placeholder="Search by student name, ID, or email..."
@@ -458,18 +550,36 @@ export const FinancialManagement = () => {
               </div>
             ) : (
               <div className="overflow-x-auto rounded-lg border">
-                <table className="w-full min-w-[720px]">
+                <table className="w-full min-w-[880px]">
                   <thead className="bg-muted">
                     <tr>
+                      <th className="p-3 text-left text-sm font-medium">
+                        <label className="inline-flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={assignmentStudentsWithStatus.length > 0 && selectedStudentIds.length === assignmentStudentsWithStatus.length}
+                            onChange={(event) => handleToggleSelectAllStudents(event.target.checked)}
+                          />
+                          <span>Select</span>
+                        </label>
+                      </th>
                       <th className="p-3 text-left text-sm font-medium">Student Name</th>
                       <th className="p-3 text-left text-sm font-medium">Student ID</th>
                       <th className="p-3 text-left text-sm font-medium">Email</th>
                       <th className="p-3 text-left text-sm font-medium">Assignment Group</th>
+                      <th className="p-3 text-left text-sm font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {assignmentStudents.map((student) => (
+                    {assignmentStudentsWithStatus.map(({ student, paymentStatus }) => (
                       <tr key={student.id} className="border-t">
+                        <td className="p-3 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={selectedStudentIds.includes(student.id)}
+                            onChange={(event) => handleStudentSelectionToggle(student.id, event.target.checked)}
+                          />
+                        </td>
                         <td className="p-3 text-sm font-medium">{getStudentDisplayName(student)}</td>
                         <td className="p-3 text-sm text-muted-foreground">{student.studentId}</td>
                         <td className="p-3 text-sm text-muted-foreground">{student.email}</td>
@@ -477,6 +587,16 @@ export const FinancialManagement = () => {
                           {student.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH
                             ? `Grade ${student.grade} - ${student.strand}`
                             : `${student.course} Year ${student.year}`}
+                        </td>
+                        <td className="p-3 text-sm">
+                          <select
+                            value={paymentStatus}
+                            onChange={(event) => handleSingleStatusChange(student.id, event.target.value as FinancialPaymentStatus)}
+                            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                          >
+                            <option value="paid">Paid</option>
+                            <option value="not_paid">Not Paid</option>
+                          </select>
                         </td>
                       </tr>
                     ))}
