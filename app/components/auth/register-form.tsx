@@ -18,6 +18,7 @@ import {
 } from "@/lib/constants"
 import { collegeCoursesStorage } from "@/lib/storage"
 
+
 export const RegisterForm = () => {
   const router = useRouter()
   const { registerStudent } = useAuth()
@@ -27,6 +28,17 @@ export const RegisterForm = () => {
 
   const [diplomaCourses, setDiplomaCourses] = useState<string[]>([])
   const [bachelorCourses, setBachelorCourses] = useState<string[]>([])
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  }
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword)
+  }
 
   const [formData, setFormData] = useState({
     email: "",
@@ -267,9 +279,27 @@ export const RegisterForm = () => {
           </div>
 
           <Input name="email" placeholder="Email" onChange={handleChange} />
-          <Input name="password" type="password" placeholder="Password" onChange={handleChange} />
-          <Input name="confirmPassword" type="password" placeholder="Confirm Password" onChange={handleChange} />
+          <div className="relative">
+              <Input name="password" type={showPassword ? "text" : "password"} placeholder="Password" onChange={handleChange} />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+          </div>
 
+          <div className="relative">
+            <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" onChange={handleChange} />
+            <button
+              type="button"
+              onClick={toggleConfirmPasswordVisibility}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+            >
+              {showConfirmPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           {/* Student ID (AUTO FORMAT) */}
           <Input
             name="studentId"
