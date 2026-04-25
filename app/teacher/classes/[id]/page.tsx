@@ -11,7 +11,7 @@ export default async function ClassDetailsPage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ClassDetails classId={id} />
+      <ClassDetails classId={decodeURIComponent(id)} />
     </Suspense>
   )
 }

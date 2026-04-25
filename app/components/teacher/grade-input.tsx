@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/app/contexts/auth-context"
 import { useState, useEffect } from "react"
-import { classesStorage, userStorage, gradesStorage, type Grade } from "@/lib/storage"
+import { gradesStorage } from "@/lib/storage"
+import { teacherService } from "@/app/services/teacher-service"
 
 export const TeacherGradeInput = () => {
   const { user } = useAuth()
@@ -19,7 +20,7 @@ export const TeacherGradeInput = () => {
 
   useEffect(() => {
     if (user) {
-      const teacherClasses = classesStorage.getByTeacherId(user.id)
+      const teacherClasses = teacherService.getMyClasses(user.id)
       setClasses(teacherClasses)
     }
   }, [user])
@@ -28,8 +29,7 @@ export const TeacherGradeInput = () => {
     if (selectedClass) {
       const classData = classes.find((c) => c.id === selectedClass)
       if (classData) {
-        const allStudents = userStorage.getStudents()
-        const enrolledStudents = allStudents.filter((s) => classData.students.includes(s.id))
+        const enrolledStudents = teacherService.getClassStudents(selectedClass)
         setStudents(enrolledStudents)
 
         const existingGrades = gradesStorage.getByClassId(selectedClass).filter(
@@ -145,7 +145,7 @@ export const TeacherGradeInput = () => {
                 <option value="">Choose a class</option>
                 {classes.map((cls) => (
                   <option key={cls.id} value={cls.id}>
-                    {cls.subjectCode} - {cls.subjectName}
+                    {cls.subjectCode} - {cls.subjectName} ({cls.courseOrStrand} Y{cls.yearOrGrade})
                   </option>
                 ))}
               </select>

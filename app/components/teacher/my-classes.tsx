@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/contexts/auth-context"
-import { classesStorage } from "@/lib/storage"
+import { teacherService } from "@/app/services/teacher-service"
 import { useMemo } from "react"
 import Link from "next/link"
 
@@ -12,11 +12,11 @@ export const TeacherMyClasses = () => {
 
   const classes = useMemo(() => {
     if (!user) return []
-    const allClasses = classesStorage.getByTeacherId(user.id)
+    const allClasses = teacherService.getMyClasses(user.id)
     return allClasses.map((cls) => ({
       id: cls.id,
       name: `${cls.subjectCode} - ${cls.subjectName}`,
-      grade: `Semester ${cls.semester}, Year ${cls.year}`,
+      grade: `${cls.courseOrStrand} • Year ${cls.yearOrGrade}`,
       studentCount: cls.students.length,
       subject: cls.subjectName,
     }))
@@ -50,7 +50,7 @@ export const TeacherMyClasses = () => {
                       {cls.grade} · {cls.studentCount} students
                     </p>
                   </div>
-                  <Link href={`/teacher/classes/${cls.id}`}>
+                  <Link href={`/teacher/classes/${encodeURIComponent(cls.id)}`}>
                     <Button size="sm">View Details</Button>
                   </Link>
                 </div>

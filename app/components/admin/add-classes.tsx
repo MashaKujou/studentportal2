@@ -5,246 +5,378 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { userStorage, subjectStorage, classesStorage } from "@/lib/storage"
-import { SubjectManagement } from "@/app/components/admin/subject-management"
+import { courseSubjectsStorage, userStorage, subjectStorage } from "@/lib/storage"
 import { useMemo, useState } from "react"
-import {
-  ACADEMIC_LEVELS,
-  SENIOR_HIGH_GRADES,
-  DIPLOMA_YEARS,
-  BACHELOR_YEARS,
-  SENIOR_HIGH_STRANDS,
-} from "@/lib/constants"
+import { ACADEMIC_LEVELS, SENIOR_HIGH_GRADES, DIPLOMA_YEARS, BACHELOR_YEARS, SENIOR_HIGH_STRANDS } from "@/lib/constants"
 import { collegeCoursesStorage } from "@/lib/storage"
 
 export const AddClasses = () => {
-  const [subjectCode, setSubjectCode] = useState("")
-  const [selectedSubject, setSelectedSubject] = useState<any>(null)
-  const [selectedTeacher, setSelectedTeacher] = useState("")
-  const [semester, setSemester] = useState("1")
-  const [year, setYear] = useState("1")
   const [newCode, setNewCode] = useState("")
   const [newName, setNewName] = useState("")
-  const [newTime, setNewTime] = useState("")
-  const [newDay, setNewDay] = useState("")
-  const [newUnit, setNewUnit] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
-
-  const [bulkAcademicLevel, setBulkAcademicLevel] = useState("")
-  const [bulkCourse, setBulkCourse] = useState("")
-  const [bulkYear, setBulkYear] = useState("")
-  const [bulkClassId, setBulkClassId] = useState("")
-  const [bulkEnrollMessage, setBulkEnrollMessage] = useState("")
-
-  const [attendanceSearchId, setAttendanceSearchId] = useState("")
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([])
-  const [attendanceSearched, setAttendanceSearched] = useState(false)
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<"all" | "present" | "absent" | "late">("all")
-  const [academicLevelFilter, setAcademicLevelFilter] = useState("")
-  const [yearFilter, setYearFilter] = useState("")
 
   const [selectedClassStudents, setSelectedClassStudents] = useState<any[]>([])
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [selectedClassName, setSelectedClassName] = useState("")
 
-  const [isBulkStudentModalOpen, setIsBulkStudentModalOpen] = useState(false)
+  // Wizard: Add Class -> Create Subject -> Assign to Course/Year
+  const [isAddClassWizardOpen, setIsAddClassWizardOpen] = useState(false)
+  const [wizardStep, setWizardStep] = useState<1 | 2>(1)
+  const [wizardAcademicLevel, setWizardAcademicLevel] = useState<"" | "senior_high" | "diploma" | "bachelor">("")
+  const [wizardCourse, setWizardCourse] = useState("")
+  const [wizardYear, setWizardYear] = useState("")
+  const [wizardTeacherId, setWizardTeacherId] = useState("")
+  const [wizardCreatedSubject, setWizardCreatedSubject] = useState<any>(null)
+  const [wizardSelectedDays, setWizardSelectedDays] = useState<string[]>([])
+  const [wizardTimeStart, setWizardTimeStart] = useState("07:00")
+  const [wizardTimeEnd, setWizardTimeEnd] = useState("08:00")
+  const [wizardStep1Errors, setWizardStep1Errors] = useState<Record<string, string>>({})
+  const [wizardStep2Errors, setWizardStep2Errors] = useState<Record<string, string>>({})
 
-  const subjects = useMemo(() => {
-    return subjectStorage.getAll()
-  }, [refreshKey])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedSortYear, setSelectedSortYear] = useState("")
+  const [selectedSortCourse, setSelectedSortCourse] = useState("")
+
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<any>(null)
+  const [editAcademicLevel, setEditAcademicLevel] = useState<"" | "senior_high" | "diploma" | "bachelor">("")
+  const [editCourse, setEditCourse] = useState("")
+  const [editYear, setEditYear] = useState("")
+  const [editTeacherId, setEditTeacherId] = useState("")
+  const [editCode, setEditCode] = useState("")
+  const [editName, setEditName] = useState("")
+  const [editTimeStart, setEditTimeStart] = useState("07:00")
+  const [editTimeEnd, setEditTimeEnd] = useState("08:00")
+  const [editDays, setEditDays] = useState<string[]>([])
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({})
+
+  const allStudents = useMemo(() => userStorage.getStudents(), [refreshKey])
+
+  const getBucketStudentCount = (academicLevel: string, courseOrStrand: string, yearOrGrade: string) => {
+    if (!academicLevel || !courseOrStrand || !yearOrGrade) return 0
+    if (academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) {
+      return allStudents.filter(
+        (s: any) =>
+          s.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH &&
+          s.strand === courseOrStrand &&
+          s.grade === yearOrGrade &&
+          s.status === "approved",
+      ).length
+    }
+    if (academicLevel === ACADEMIC_LEVELS.DIPLOMA) {
+      return allStudents.filter(
+        (s: any) =>
+          s.academicLevel === ACADEMIC_LEVELS.DIPLOMA &&
+          s.course === courseOrStrand &&
+          s.year === yearOrGrade &&
+          s.status === "approved",
+      ).length
+    }
+    if (academicLevel === ACADEMIC_LEVELS.BACHELOR) {
+      return allStudents.filter(
+        (s: any) =>
+          s.academicLevel === ACADEMIC_LEVELS.BACHELOR &&
+          s.course === courseOrStrand &&
+          s.year === yearOrGrade &&
+          s.status === "approved",
+      ).length
+    }
+    return 0
+  }
+
+  const timeOptions = useMemo(() => {
+    const options: string[] = []
+    for (let h = 7; h <= 20; h++) {
+      const hh = String(h).padStart(2, "0")
+      options.push(`${hh}:00`)
+    }
+    return options
+  }, [])
+
+  const wizardCourses = useMemo(() => {
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) return SENIOR_HIGH_STRANDS
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) return collegeCoursesStorage.getAll().diplomaCourses
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.BACHELOR) return collegeCoursesStorage.getAll().bachelorCourses
+    return []
+  }, [wizardAcademicLevel])
+
+  const editCourses = useMemo(() => {
+    if (editAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) return SENIOR_HIGH_STRANDS
+    if (editAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) return collegeCoursesStorage.getAll().diplomaCourses
+    if (editAcademicLevel === ACADEMIC_LEVELS.BACHELOR) return collegeCoursesStorage.getAll().bachelorCourses
+    return []
+  }, [editAcademicLevel])
+
+  const wizardYears = useMemo(() => {
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) return SENIOR_HIGH_GRADES
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) return DIPLOMA_YEARS
+    if (wizardAcademicLevel === ACADEMIC_LEVELS.BACHELOR) return BACHELOR_YEARS
+    return []
+  }, [wizardAcademicLevel])
+
+  const editYears = useMemo(() => {
+    if (editAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) return SENIOR_HIGH_GRADES
+    if (editAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) return DIPLOMA_YEARS
+    if (editAcademicLevel === ACADEMIC_LEVELS.BACHELOR) return BACHELOR_YEARS
+    return []
+  }, [editAcademicLevel])
+
+  const wizardAssignedSubjects = useMemo(() => {
+    if (!wizardAcademicLevel || !wizardCourse || !wizardYear) return []
+    const bucket = courseSubjectsStorage.getBucket(wizardAcademicLevel as any, wizardCourse, wizardYear)
+    const subjects = subjectStorage.getAll()
+    const teachers = userStorage.getTeachers()
+    const byId = new Map(subjects.map((s) => [s.id, s]))
+    const teacherById = new Map(teachers.map((t) => [t.id, `${t.firstName} ${t.lastName}`.trim()]))
+
+    const assignments =
+      bucket?.subjectAssignments ||
+      (bucket?.subjectIds || []).map((id) => ({ subjectId: id, teacherId: "" }))
+
+    return assignments
+      .map((a) => {
+        const subject = byId.get(a.subjectId)
+        if (!subject) return null
+        return {
+          ...subject,
+          assignedTeacherId: a.teacherId,
+          assignedTeacherName: a.teacherId ? teacherById.get(a.teacherId) || "Unknown Teacher" : "Unassigned",
+        }
+      })
+      .filter(Boolean)
+  }, [wizardAcademicLevel, wizardCourse, wizardYear, refreshKey])
+
+  const handleWizardCreateSubject = () => {
+    const errors: Record<string, string> = {}
+    if (!newCode.trim()) errors.newCode = "Subject Code is required."
+    if (!newName.trim()) errors.newName = "Subject Name is required."
+    if (!wizardAcademicLevel) errors.wizardAcademicLevel = "Academic Level is required."
+    if (!wizardTimeStart) errors.wizardTimeStart = "Start Time is required."
+    if (!wizardTimeEnd) errors.wizardTimeEnd = "End Time is required."
+    if (wizardTimeStart >= wizardTimeEnd) errors.timeRange = "End Time must be later than Start Time."
+    if (wizardSelectedDays.length === 0) errors.wizardSelectedDays = "Select at least one day."
+    if (Object.keys(errors).length > 0) {
+      setWizardStep1Errors(errors)
+      return
+    }
+    setWizardStep1Errors({})
+
+    const unitLabel =
+      wizardAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH
+        ? "Senior High"
+        : wizardAcademicLevel === ACADEMIC_LEVELS.DIPLOMA
+          ? "Diploma"
+          : "Bachelor"
+
+    const timeLabel = `${wizardTimeStart} - ${wizardTimeEnd}`
+    const dayLabel = wizardSelectedDays.join(", ")
+
+    const created = subjectStorage.add({
+      code: newCode.toUpperCase(),
+      name: newName,
+      time: timeLabel,
+      day: dayLabel,
+      unit: unitLabel,
+    })
+    setWizardCreatedSubject(created)
+    setNewCode("")
+    setNewName("")
+    setWizardSelectedDays([])
+    setWizardTimeStart("07:00")
+    setWizardTimeEnd("08:00")
+    setWizardStep(2)
+    setRefreshKey((k) => k + 1)
+  }
+
+  const handleWizardAssignSubject = () => {
+    const errors: Record<string, string> = {}
+    if (!wizardAcademicLevel) errors.wizardAcademicLevel = "Academic Level is required."
+    if (!wizardCourse) errors.wizardCourse = "Course/Strand is required."
+    if (!wizardYear) errors.wizardYear = "Year/Grade is required."
+    if (!wizardTeacherId) errors.wizardTeacherId = "Teacher is required."
+    if (!wizardCreatedSubject) errors.wizardCreatedSubject = "Create subject first."
+    if (Object.keys(errors).length > 0) {
+      setWizardStep2Errors(errors)
+      return
+    }
+    setWizardStep2Errors({})
+    courseSubjectsStorage.addSubjectToBucket(
+      wizardAcademicLevel as any,
+      wizardCourse,
+      wizardYear,
+      wizardCreatedSubject.id,
+      wizardTeacherId,
+    )
+    setIsAddClassWizardOpen(false)
+    setWizardStep(1)
+    setWizardCreatedSubject(null)
+    setWizardTeacherId("")
+    setRefreshKey((k) => k + 1)
+  }
+
+  const handleOpenWizard = () => {
+    setIsAddClassWizardOpen(true)
+    setWizardStep(1)
+    setWizardCreatedSubject(null)
+    setWizardAcademicLevel("")
+    setWizardCourse("")
+    setWizardYear("")
+    setWizardTeacherId("")
+    setWizardSelectedDays([])
+    setWizardTimeStart("07:00")
+    setWizardTimeEnd("08:00")
+  }
 
   const teachers = useMemo(() => {
     return userStorage.getTeachers()
-  }, [])
-
-  const classes = useMemo(() => {
-    return classesStorage.getAll()
   }, [refreshKey])
 
-  const availableCourses = useMemo(() => {
-    if (bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) {
-      return SENIOR_HIGH_STRANDS
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) {
-      return collegeCoursesStorage.getAll().diplomaCourses
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.BACHELOR) {
-      return collegeCoursesStorage.getAll().bachelorCourses
-    }
-    return []
-  }, [bulkAcademicLevel])
+  const allClassRows = useMemo(() => {
+    const buckets = courseSubjectsStorage.getAll()
+    const subjects = subjectStorage.getAll()
+    const subjectById = new Map(subjects.map((s) => [s.id, s]))
+    const teacherById = new Map(teachers.map((t) => [t.id, `${t.firstName} ${t.lastName}`.trim()]))
 
-  const availableYears = useMemo(() => {
-    if (bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) {
-      return SENIOR_HIGH_GRADES
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) {
-      return DIPLOMA_YEARS
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.BACHELOR) {
-      return BACHELOR_YEARS
-    }
-    return []
-  }, [bulkAcademicLevel])
+    const rows: any[] = []
+    buckets.forEach((bucket) => {
+      const assignments = bucket.subjectAssignments || bucket.subjectIds.map((id) => ({ subjectId: id, teacherId: "" }))
+      assignments.forEach((assignment) => {
+        const subject = subjectById.get(assignment.subjectId)
+        if (!subject) return
+        rows.push({
+          id: `${bucket.id}:${subject.id}`,
+          bucketId: bucket.id,
+          subjectId: subject.id,
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          day: subject.day,
+          time: subject.time,
+          teacherId: assignment.teacherId,
+          teacherName: assignment.teacherId ? teacherById.get(assignment.teacherId) || "Unknown Teacher" : "Unassigned",
+          academicLevel: bucket.academicLevel,
+          courseOrStrand: bucket.courseOrStrand,
+          yearOrGrade: bucket.yearOrGrade,
+          students: getBucketStudentCount(bucket.academicLevel, bucket.courseOrStrand, bucket.yearOrGrade),
+        })
+      })
+    })
 
-  const matchingStudents = useMemo(() => {
-    if (!bulkAcademicLevel || !bulkCourse || !bulkYear) return []
+    return rows
+  }, [refreshKey, teachers])
 
-    const allStudents = userStorage.getStudents()
+  const sortYearOptions = useMemo(() => {
+    return Array.from(new Set(allClassRows.map((r) => String(r.yearOrGrade)))).sort((a, b) => a.localeCompare(b))
+  }, [allClassRows])
 
-    if (bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) {
-      return allStudents.filter(
-        (s) =>
-          s.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH &&
-          s.strand === bulkCourse &&
-          s.grade === bulkYear &&
-          s.status === "approved",
-      )
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.DIPLOMA) {
-      return allStudents.filter(
-        (s) =>
-          s.academicLevel === ACADEMIC_LEVELS.DIPLOMA &&
-          s.course === bulkCourse &&
-          s.year === bulkYear &&
-          s.status === "approved",
-      )
-    } else if (bulkAcademicLevel === ACADEMIC_LEVELS.BACHELOR) {
-      return allStudents.filter(
-        (s) =>
-          s.academicLevel === ACADEMIC_LEVELS.BACHELOR &&
-          s.course === bulkCourse &&
-          s.year === bulkYear &&
-          s.status === "approved",
-      )
-    }
-    return []
-  }, [bulkAcademicLevel, bulkCourse, bulkYear])
+  const sortCourseOptions = useMemo(() => {
+    const configured = [
+      ...SENIOR_HIGH_STRANDS,
+      ...collegeCoursesStorage.getAll().diplomaCourses,
+      ...collegeCoursesStorage.getAll().bachelorCourses,
+    ]
+    return Array.from(new Set(configured.map((v) => String(v)))).sort((a, b) => a.localeCompare(b))
+  }, [refreshKey])
 
-  const handleSearchSubject = () => {
-    const found = subjectStorage.getByCode(subjectCode)
-    setSelectedSubject(found || null)
+  const classes = useMemo(() => {
+    const filtered = allClassRows.filter((r) => {
+      const q = searchTerm.trim().toLowerCase()
+      const matchesSearch =
+        !q ||
+        r.subjectCode.toLowerCase().includes(q) ||
+        r.subjectName.toLowerCase().includes(q) ||
+        r.courseOrStrand.toLowerCase().includes(q) ||
+        String(r.yearOrGrade).toLowerCase().includes(q) ||
+        r.teacherName.toLowerCase().includes(q)
+      const matchesYear = !selectedSortYear || String(r.yearOrGrade) === selectedSortYear
+      const matchesCourse = !selectedSortCourse || String(r.courseOrStrand) === selectedSortCourse
+      return matchesSearch && matchesYear && matchesCourse
+    })
+
+    filtered.sort(
+      (a, b) =>
+        a.courseOrStrand.localeCompare(b.courseOrStrand) || String(a.yearOrGrade).localeCompare(String(b.yearOrGrade)),
+    )
+
+    return filtered
+  }, [allClassRows, searchTerm, selectedSortYear, selectedSortCourse])
+
+  // Attendance removed.
+  const openEditModal = (item: any) => {
+    const [timeStart, timeEnd] = (item.time || "07:00 - 08:00").split(" - ")
+    const days = (item.day || "").split(",").map((d: string) => d.trim()).filter(Boolean)
+
+    setEditingItem(item)
+    setEditAcademicLevel(item.academicLevel)
+    setEditCourse(item.courseOrStrand)
+    setEditYear(item.yearOrGrade)
+    setEditTeacherId(item.teacherId || "")
+    setEditCode(item.subjectCode || "")
+    setEditName(item.subjectName || "")
+    setEditTimeStart(timeStart || "07:00")
+    setEditTimeEnd(timeEnd || "08:00")
+    setEditDays(days)
+    setEditErrors({})
+    setIsEditOpen(true)
   }
 
-  const handleAddClass = () => {
-    if (selectedSubject && selectedTeacher) {
-      const newClass = {
-        id: Date.now().toString(),
-        subjectCode: selectedSubject.code,
-        subjectName: selectedSubject.name,
-        teacherId: selectedTeacher,
-        semester: semester,
-        year: year,
-        createdAt: new Date().toISOString(),
-      }
-      const allClasses = classesStorage.getAll()
-      classesStorage.saveAll([...allClasses, newClass])
-      setSelectedSubject(null)
-      setSelectedTeacher("")
-      setSemester("1")
-      setYear("1")
-      setSubjectCode("")
-      setRefreshKey((k) => k + 1)
-    }
-  }
-
-  const handleCreateSubject = () => {
-    // Subject creation is now handled by SubjectManagement component
-    // Keep for backward compatibility if needed
-  }
-
-  const handleDeleteSubject = (id: string) => {
-    // Subject deletion is now handled by SubjectManagement component
-    // Keep for backward compatibility if needed
-  }
-
-  const handleBulkEnroll = () => {
-    if (!bulkAcademicLevel || !bulkCourse || !bulkYear || !bulkClassId) {
-      setBulkEnrollMessage("Please fill in all fields")
+  const handleSaveEdit = () => {
+    if (!editingItem) return
+    const errors: Record<string, string> = {}
+    if (!editAcademicLevel) errors.editAcademicLevel = "Academic Level is required."
+    if (!editCourse) errors.editCourse = "Course/Strand is required."
+    if (!editYear) errors.editYear = "Year/Grade is required."
+    if (!editTeacherId) errors.editTeacherId = "Teacher is required."
+    if (!editCode.trim()) errors.editCode = "Subject Code is required."
+    if (!editName.trim()) errors.editName = "Subject Name is required."
+    if (!editTimeStart || !editTimeEnd || editTimeStart >= editTimeEnd) errors.editTime = "Valid time range is required."
+    if (editDays.length === 0) errors.editDays = "Select at least one day."
+    if (Object.keys(errors).length > 0) {
+      setEditErrors(errors)
       return
     }
 
-    // Update students to be enrolled in the class
-    const students = userStorage.getStudents()
-    const updatedStudents = students.map((s: any) => {
-      if (matchingStudents.some((ms) => ms.id === s.id)) {
-        return {
-          ...s,
-          enrolledClasses: [...(s.enrolledClasses || []), bulkClassId],
-        }
-      }
-      return s
+    subjectStorage.update(editingItem.subjectId, {
+      code: editCode.toUpperCase(),
+      name: editName,
+      day: editDays.join(", "),
+      time: `${editTimeStart} - ${editTimeEnd}`,
     })
-    userStorage.saveStudents(updatedStudents)
 
-    setBulkEnrollMessage(`Successfully enrolled ${matchingStudents.length} students`)
+    courseSubjectsStorage.moveOrUpdateSubjectAssignment({
+      oldAcademicLevel: editingItem.academicLevel,
+      oldCourseOrStrand: editingItem.courseOrStrand,
+      oldYearOrGrade: editingItem.yearOrGrade,
+      newAcademicLevel: editAcademicLevel as any,
+      newCourseOrStrand: editCourse,
+      newYearOrGrade: editYear,
+      subjectId: editingItem.subjectId,
+      teacherId: editTeacherId,
+    })
 
-    setTimeout(() => {
-      setBulkEnrollMessage("")
-      setBulkAcademicLevel("")
-      setBulkCourse("")
-      setBulkYear("")
-      setBulkClassId("")
-      setRefreshKey((k) => k + 1)
-    }, 2000)
-  }
-
-  const handleSearchAttendance = () => {
-    const allAttendance = JSON.parse(localStorage.getItem("attendance") || "[]")
-    const filtered = attendanceSearchId
-      ? allAttendance.filter((att: any) => 
-          att.id.toLowerCase().includes(attendanceSearchId.toLowerCase()) ||
-          att.classId.toLowerCase().includes(attendanceSearchId.toLowerCase())
-        )
-      : allAttendance
-    
-    setAttendanceRecords(filtered)
-    setAttendanceSearched(true)
-    setStatusFilter("all")
-    setSelectedRecordId(null)
-  }
-
-  const handleStatusFilterClick = (recordId: string, status: "present" | "absent" | "late") => {
-    if (selectedRecordId === recordId && statusFilter === status) {
-      setStatusFilter("all")
-      setSelectedRecordId(null)
-    } else {
-      setStatusFilter(status)
-      setSelectedRecordId(recordId)
-    }
-  }
-
-  const getFilteredStudents = (record: any) => {
-    let filtered = record.records
-
-    if (selectedRecordId === record.id && statusFilter !== "all") {
-      filtered = filtered.filter((r: any) => r.status === statusFilter)
-    }
-
-    if (academicLevelFilter || yearFilter) {
-      const allStudents = userStorage.getStudents()
-      filtered = filtered.filter((r: any) => {
-        const student = allStudents.find((s) => s.id === r.studentId)
-        if (!student) return false
-        
-        let matches = true
-        if (academicLevelFilter && student.academicLevel !== academicLevelFilter) {
-          matches = false
-        }
-        if (yearFilter) {
-          const studentYear = student.year || student.grade
-          if (studentYear !== yearFilter) {
-            matches = false
-          }
-        }
-        return matches
-      })
-    }
-
-    return filtered
+    setIsEditOpen(false)
+    setEditingItem(null)
+    setRefreshKey((k) => k + 1)
   }
 
   const handleViewStudents = (classData: any) => {
     const allStudents = userStorage.getStudents()
-    const enrolledStudents = classData.students
-      .map((studentId: string) => allStudents.find((s) => s.id === studentId))
-      .filter(Boolean)
+    const enrolledStudents = allStudents
+      .filter((s) => {
+        if (classData.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH) {
+          return (
+            s.status === "approved" &&
+            s.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH &&
+            s.strand === classData.courseOrStrand &&
+            s.grade === classData.yearOrGrade
+          )
+        }
+        return (
+          s.status === "approved" &&
+          s.academicLevel === classData.academicLevel &&
+          s.course === classData.courseOrStrand &&
+          s.year === classData.yearOrGrade
+        )
+      })
       .sort((a: any, b: any) => {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
         const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
@@ -256,18 +388,6 @@ export const AddClasses = () => {
     setIsStudentModalOpen(true)
   }
 
-  const handleViewBulkStudents = () => {
-    const sortedStudents = [...matchingStudents].sort((a, b) => {
-      const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
-      const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
-      return nameA.localeCompare(nameB)
-    })
-    
-    setSelectedClassStudents(sortedStudents)
-    setSelectedClassName(`${bulkAcademicLevel} - ${bulkCourse} (Year ${bulkYear})`)
-    setIsBulkStudentModalOpen(true)
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -275,260 +395,63 @@ export const AddClasses = () => {
         <p className="text-muted-foreground">Manage subjects and create class sections</p>
       </div>
 
-      <Tabs defaultValue="add-class">
+      <div className="flex items-center justify-between gap-3">
+        <div />
+        <Button onClick={handleOpenWizard} className="h-10 px-5 font-semibold">
+          Add Subject to Course & Year
+        </Button>
+      </div>
+
+      <Tabs defaultValue="view-classes">
         <TabsList>
-          <TabsTrigger value="add-class">Add Class</TabsTrigger>
-          <TabsTrigger value="bulk-enroll">Bulk Enroll Students</TabsTrigger>
-          <TabsTrigger value="manage-subjects">Manage Subjects</TabsTrigger>
           <TabsTrigger value="view-classes">View Classes</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="add-class">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create Class Section</CardTitle>
-              <CardDescription>Add a new class by selecting subject and teacher</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search Subject by Code</label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter subject code..."
-                    value={subjectCode}
-                    onChange={(e) => setSubjectCode(e.target.value.toUpperCase())}
-                  />
-                  <Button 
-                    onClick={handleSearchSubject}
-                    className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-                  >
-                    Search
-                  </Button>
-                </div>
-              </div>
-
-              {selectedSubject && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
-                  <p className="font-semibold">Subject Found</p>
-                  <p className="text-sm">
-                    <strong>Code:</strong> {selectedSubject.code}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Name:</strong> {selectedSubject.name}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Time:</strong> {selectedSubject.time}
-                  </p>
-                  <p className="text-sm">
-                    <strong>Day:</strong> {selectedSubject.day}
-                  </p>
-                </div>
-              )}
-
-              {selectedSubject && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Teacher</label>
-                    <select
-                      value={selectedTeacher}
-                      onChange={(e) => setSelectedTeacher(e.target.value)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Choose a teacher...</option>
-                      {teachers.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.firstName} {t.lastName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Semester</label>
-                      <select
-                        value={semester}
-                        onChange={(e) => setSemester(e.target.value)}
-                        className="w-full p-2 border rounded"
-                      >
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Year/Level</label>
-                      <select
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                        className="w-full p-2 border rounded"
-                      >
-                        <option value="1">Year 1</option>
-                        <option value="2">Year 2</option>
-                        <option value="3">Year 3</option>
-                        <option value="4">Year 4</option>
-                      </select>
-                    </div>
-                  </div>
-
-                <Button 
-                  onClick={handleAddClass} 
-                  className="w-full h-11 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
-                >
-                  Create Class Section
-                </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bulk-enroll">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bulk Enroll Students</CardTitle>
-              <CardDescription>
-                Enroll multiple students to a class based on academic level, course, and year
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Academic Level</label>
-                <select
-                  value={bulkAcademicLevel}
-                  onChange={(e) => {
-                    setBulkAcademicLevel(e.target.value)
-                    setBulkCourse("")
-                    setBulkYear("")
-                  }}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Choose academic level...</option>
-                  <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High School</option>
-                  <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma (College)</option>
-                  <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor (College)</option>
-                </select>
-              </div>
-
-              {bulkAcademicLevel && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Select {bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "Strand" : "Course Program"}
-                  </label>
-                  <select
-                    value={bulkCourse}
-                    onChange={(e) => {
-                      setBulkCourse(e.target.value)
-                      setBulkYear("")
-                    }}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">
-                      Choose {bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "strand" : "course"}...
-                    </option>
-                    {availableCourses.map((course) => (
-                      <option key={course} value={course}>
-                        {course}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {bulkAcademicLevel && bulkCourse && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Year/Level</label>
-                  <select
-                    value={bulkYear}
-                    onChange={(e) => setBulkYear(e.target.value)}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">Choose year...</option>
-                    {availableYears.map((y) => (
-                      <option key={y} value={y}>
-                        {bulkAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? `Grade ${y}` : `Year ${y}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {bulkAcademicLevel && bulkCourse && bulkYear && (
-                <>
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-lg">{matchingStudents.length} Students Found</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          These students will be enrolled to the selected class
-                        </p>
-                      </div>
-                      <Button 
-                        onClick={handleViewBulkStudents}
-                        disabled={matchingStudents.length === 0}
-                        className="h-9 px-4 font-medium bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        View Students
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Class to Enroll In</label>
-                    <select
-                      value={bulkClassId}
-                      onChange={(e) => setBulkClassId(e.target.value)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Choose a class...</option>
-                      {classes.map((cls) => (
-                        <option key={cls.id} value={cls.id}>
-                          {cls.subjectCode} - {cls.subjectName} (Teacher: {cls.teacherName})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {bulkEnrollMessage && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded text-green-700">
-                      {bulkEnrollMessage}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleBulkEnroll}
-                    disabled={matchingStudents.length === 0}
-                    className="w-full h-11 font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    Enroll All {matchingStudents.length} Students
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="manage-subjects">
-          <SubjectManagement />
-        </TabsContent>
 
         <TabsContent value="view-classes">
           <Card>
             <CardHeader>
               <CardTitle>All Classes</CardTitle>
-              <CardDescription>Classes created from subjects</CardDescription>
+              <CardDescription>Assigned subjects by course/strand and year</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-end">
+                <Input
+                  placeholder="Search subject, teacher, course/strand, year..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-9"
+                />
+                <Input
+                  list="year-filter-options"
+                  placeholder="Choose Year"
+                  value={selectedSortYear}
+                  onChange={(e) => setSelectedSortYear(e.target.value)}
+                  className="h-9"
+                />
+                <datalist id="year-filter-options">
+                  {sortYearOptions.map((year) => (
+                    <option key={year} value={year} />
+                  ))}
+                </datalist>
+                <Input
+                  list="course-filter-options"
+                  placeholder="Choose Course or Strand"
+                  value={selectedSortCourse}
+                  onChange={(e) => setSelectedSortCourse(e.target.value)}
+                  className="h-9"
+                />
+                <datalist id="course-filter-options">
+                  {sortCourseOptions.map((course) => (
+                    <option key={course} value={course} />
+                  ))}
+                </datalist>
+              </div>
               {classes.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">No classes created yet</p>
               ) : (
                 <div className="space-y-2">
                   {classes.map((cls) => {
-                    const allStudents = userStorage.getStudents()
-                    const existingStudents = cls.students.filter((studentId: string) => 
-                      allStudents.find((s) => s.id === studentId)
-                    )
-                    const studentCount = existingStudents.length
+                    const studentCount = cls.students
                     
                     return (
                       <div key={cls.id} className="p-4 border rounded-lg hover:bg-muted">
@@ -539,7 +462,7 @@ export const AddClasses = () => {
                             </p>
                             <p className="text-sm text-muted-foreground">Teacher: {cls.teacherName}</p>
                             <p className="text-xs text-muted-foreground">
-                              Semester {cls.semester} • Year {cls.year} • {cls.day} at {cls.time}
+                              {cls.academicLevel} • {cls.courseOrStrand} • {cls.yearOrGrade} • {cls.day} at {cls.time}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
                               <p className="text-sm font-medium text-blue-600">
@@ -555,6 +478,13 @@ export const AddClasses = () => {
                               >
                                 View Students
                               </Button>
+                              <Button
+                                onClick={() => openEditModal(cls)}
+                                className="h-8 px-3 text-xs font-medium"
+                                variant="outline"
+                              >
+                                Edit
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -567,280 +497,6 @@ export const AddClasses = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="attendance">
-          <Card>
-            <CardHeader>
-              <CardTitle>View Attendance Records</CardTitle>
-              <CardDescription>Search and view attendance by ID or view all records</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Card className="bg-muted/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Filter Students</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Academic Level</label>
-                      <select
-                        value={academicLevelFilter}
-                        onChange={(e) => {
-                          setAcademicLevelFilter(e.target.value)
-                          setYearFilter("")
-                        }}
-                        className="w-full p-2 border rounded text-sm"
-                      >
-                        <option value="">All Levels</option>
-                        <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High School</option>
-                        <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma</option>
-                        <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Year/Grade</label>
-                      <select
-                        value={yearFilter}
-                        onChange={(e) => setYearFilter(e.target.value)}
-                        className="w-full p-2 border rounded text-sm"
-                        disabled={!academicLevelFilter}
-                      >
-                        <option value="">All Years</option>
-                        {academicLevelFilter === ACADEMIC_LEVELS.SENIOR_HIGH &&
-                          SENIOR_HIGH_GRADES.map((grade) => (
-                            <option key={grade} value={grade}>
-                              Grade {grade}
-                            </option>
-                          ))}
-                        {academicLevelFilter === ACADEMIC_LEVELS.DIPLOMA &&
-                          DIPLOMA_YEARS.map((year) => (
-                            <option key={year} value={year}>
-                              Year {year}
-                            </option>
-                          ))}
-                        {academicLevelFilter === ACADEMIC_LEVELS.BACHELOR &&
-                          BACHELOR_YEARS.map((year) => (
-                            <option key={year} value={year}>
-                              Year {year}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {(academicLevelFilter || yearFilter) && (
-                    <Button
-                      className="mt-3 w-full h-9 font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => {
-                        setAcademicLevelFilter("")
-                        setYearFilter("")
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter Attendance ID or Class ID..."
-                  value={attendanceSearchId}
-                  onChange={(e) => setAttendanceSearchId(e.target.value)}
-                />
-                <Button 
-                  onClick={handleSearchAttendance}
-                  className="h-10 px-6 font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-                >
-                  Search
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setAttendanceSearchId("")
-                    setAttendanceRecords([])
-                    setAttendanceSearched(false)
-                    setStatusFilter("all")
-                    setSelectedRecordId(null)
-                    setAcademicLevelFilter("")
-                    setYearFilter("")
-                  }}
-                  className="h-10 px-6 font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
-                >
-                  Clear
-                </Button>
-              </div>
-
-              {attendanceSearched && (
-                <div className="space-y-4">
-                  {attendanceRecords.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No attendance records found
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Found {attendanceRecords.length} attendance record(s)
-                      </p>
-                      
-                      {attendanceRecords.map((record) => {
-                        const filteredStudents = getFilteredStudents(record)
-                        
-                        // Hide entire record if no students match the filters
-                        if (filteredStudents.length === 0 && (academicLevelFilter || yearFilter)) {
-                          return null
-                        }
-                        
-                        const presentCount = filteredStudents.filter((r: any) => r.status === "present").length
-                        const absentCount = filteredStudents.filter((r: any) => r.status === "absent").length
-                        const lateCount = filteredStudents.filter((r: any) => r.status === "late").length
-
-                        return (
-                          <Card key={record.id} className="border-2">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-lg">Attendance #{record.id}</CardTitle>
-                                  <CardDescription>
-                                    Date: {new Date(record.date).toLocaleDateString()}
-                                  </CardDescription>
-                                </div>
-                                <div className="text-right text-sm">
-                                  <p className="font-medium">{record.subjectCode}</p>
-                                  <p className="text-muted-foreground">{record.className}</p>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-3 gap-4 p-3 bg-muted rounded-lg">
-                                  <button
-                                    onClick={() => handleStatusFilterClick(record.id, "present")}
-                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
-                                      selectedRecordId === record.id && statusFilter === "present"
-                                        ? "bg-green-100 ring-2 ring-green-500"
-                                        : "hover:bg-green-50"
-                                    }`}
-                                  >
-                                    <p className="text-2xl font-bold text-green-600">
-                                      {presentCount}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">Present</p>
-                                  </button>
-                                  <button
-                                    onClick={() => handleStatusFilterClick(record.id, "absent")}
-                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
-                                      selectedRecordId === record.id && statusFilter === "absent"
-                                        ? "bg-red-100 ring-2 ring-red-500"
-                                        : "hover:bg-red-50"
-                                    }`}
-                                  >
-                                    <p className="text-2xl font-bold text-red-600">
-                                      {absentCount}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">Absent</p>
-                                  </button>
-                                  <button
-                                    onClick={() => handleStatusFilterClick(record.id, "late")}
-                                    className={`text-center transition-all hover:scale-105 rounded-lg p-2 ${
-                                      selectedRecordId === record.id && statusFilter === "late"
-                                        ? "bg-orange-100 ring-2 ring-orange-500"
-                                        : "hover:bg-orange-50"
-                                    }`}
-                                  >
-                                    <p className="text-2xl font-bold text-orange-600">
-                                      {lateCount}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">Late</p>
-                                  </button>
-                                </div>
-
-                                {selectedRecordId === record.id && statusFilter !== "all" && (
-                                  <div className="flex items-center justify-between px-3 py-2 bg-blue-50 rounded-lg text-sm">
-                                    <p className="text-blue-700">
-                                      Showing only <strong>{statusFilter}</strong> students
-                                    </p>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        setStatusFilter("all")
-                                        setSelectedRecordId(null)
-                                      }}
-                                    >
-                                      Show All
-                                    </Button>
-                                  </div>
-                                )}
-
-                                {(academicLevelFilter || yearFilter) && (
-                                  <div className="px-3 py-2 bg-purple-50 rounded-lg text-sm">
-                                    <p className="text-purple-700">
-                                      Filtered by:{" "}
-                                      {academicLevelFilter && (
-                                        <strong>
-                                          {academicLevelFilter === ACADEMIC_LEVELS.SENIOR_HIGH
-                                            ? "Senior High"
-                                            : academicLevelFilter === ACADEMIC_LEVELS.DIPLOMA
-                                              ? "Diploma"
-                                              : "Bachelor"}
-                                        </strong>
-                                      )}
-                                      {academicLevelFilter && yearFilter && " • "}
-                                      {yearFilter && <strong>Year/Grade {yearFilter}</strong>}
-                                    </p>
-                                  </div>
-                                )}
-
-                                <div className="border rounded-lg overflow-hidden">
-                                  <table className="w-full">
-                                    <thead className="bg-muted">
-                                      <tr>
-                                        <th className="text-left p-3 font-medium">Student Name</th>
-                                        <th className="text-center p-3 font-medium">Status</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {filteredStudents.length === 0 ? (
-                                        <tr>
-                                          <td colSpan={2} className="p-8 text-center text-muted-foreground">
-                                            No students match the selected filters
-                                          </td>
-                                        </tr>
-                                      ) : (
-                                        filteredStudents.map((student: any, idx: number) => (
-                                          <tr key={idx} className="border-t">
-                                            <td className="p-3">{student.studentName}</td>
-                                            <td className="p-3 text-center">
-                                              <span
-                                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                                  student.status === "present"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : student.status === "absent"
-                                                      ? "bg-red-100 text-red-700"
-                                                      : "bg-orange-100 text-orange-700"
-                                                }`}
-                                              >
-                                                {student.status.toUpperCase()}
-                                              </span>
-                                            </td>
-                                          </tr>
-                                        ))
-                                      )}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <Dialog open={isStudentModalOpen} onOpenChange={setIsStudentModalOpen}>
@@ -890,49 +546,364 @@ export const AddClasses = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isBulkStudentModalOpen} onOpenChange={setIsBulkStudentModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      {/* Add Class Wizard Modal */}
+      <Dialog open={isAddClassWizardOpen} onOpenChange={setIsAddClassWizardOpen}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Students to be Enrolled - {selectedClassName}</DialogTitle>
+            <DialogTitle>Add Class</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
-            {selectedClassStudents.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No students found</p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Total: {selectedClassStudents.length} {selectedClassStudents.length === 1 ? 'student' : 'students'}
+
+          {wizardStep === 1 && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg border bg-muted/30">
+                <p className="text-sm font-semibold">Subject Form</p>
+                <p className="text-xs text-muted-foreground">Fill up subject info then create.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Subject Code</label>
+                  <Input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="e.g. CS101" />
+                  {wizardStep1Errors.newCode && <p className="text-xs text-red-600">{wizardStep1Errors.newCode}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Academic Level</label>
+                  <select
+                    value={wizardAcademicLevel}
+                    onChange={(e) => setWizardAcademicLevel(e.target.value as any)}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select...</option>
+                    <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High</option>
+                    <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma</option>
+                    <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor</option>
+                  </select>
+                  {wizardStep1Errors.wizardAcademicLevel && <p className="text-xs text-red-600">{wizardStep1Errors.wizardAcademicLevel}</p>}
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium">Subject Name</label>
+                  <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Subject name" />
+                  {wizardStep1Errors.newName && <p className="text-xs text-red-600">{wizardStep1Errors.newName}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Time (Start)</label>
+                  <select
+                    value={wizardTimeStart}
+                    onChange={(e) => setWizardTimeStart(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  {wizardStep1Errors.wizardTimeStart && <p className="text-xs text-red-600">{wizardStep1Errors.wizardTimeStart}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Time (End)</label>
+                  <select
+                    value={wizardTimeEnd}
+                    onChange={(e) => setWizardTimeEnd(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  {wizardStep1Errors.wizardTimeEnd && <p className="text-xs text-red-600">{wizardStep1Errors.wizardTimeEnd}</p>}
+                </div>
+                {wizardStep1Errors.timeRange && <p className="text-xs text-red-600 md:col-span-2">{wizardStep1Errors.timeRange}</p>}
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Day (click to select)</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => {
+                      const checked = wizardSelectedDays.includes(day)
+                      return (
+                        <label key={day} className="flex items-center gap-2 text-sm border rounded px-3 py-2 bg-background">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) setWizardSelectedDays((prev) => [...prev, day])
+                              else setWizardSelectedDays((prev) => prev.filter((d) => d !== day))
+                            }}
+                          />
+                          {day}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+                {wizardStep1Errors.wizardSelectedDays && <p className="text-xs text-red-600">{wizardStep1Errors.wizardSelectedDays}</p>}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => setIsAddClassWizardOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleWizardCreateSubject}
+                  disabled={!newCode || !newName || !wizardAcademicLevel || wizardSelectedDays.length === 0}
+                >
+                  Create Subject
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {wizardStep === 2 && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg border bg-muted/30">
+                <p className="text-sm font-semibold">Assign Subject to Course & Year</p>
+                <p className="text-xs text-muted-foreground">
+                  Subject created: <span className="font-semibold">{wizardCreatedSubject?.code}</span> —{" "}
+                  {wizardCreatedSubject?.name}
                 </p>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="text-left p-3 font-medium">#</th>
-                        <th className="text-left p-3 font-medium">Student Name</th>
-                        <th className="text-left p-3 font-medium">Email</th>
-                        <th className="text-left p-3 font-medium">Course/Strand</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedClassStudents.map((student: any, idx: number) => (
-                        <tr key={student.id} className="border-t hover:bg-muted/50">
-                          <td className="p-3 text-muted-foreground">{idx + 1}</td>
-                          <td className="p-3 font-medium">
-                            {student.firstName} {student.lastName}
-                          </td>
-                          <td className="p-3 text-sm text-muted-foreground">{student.email}</td>
-                          <td className="p-3 text-sm">
-                            {student.academicLevel === ACADEMIC_LEVELS.SENIOR_HIGH 
-                              ? student.strand 
-                              : student.course}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Academic Level</label>
+                  <select
+                    value={wizardAcademicLevel}
+                    onChange={(e) => {
+                      setWizardAcademicLevel(e.target.value as any)
+                      setWizardCourse("")
+                      setWizardYear("")
+                    }}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select...</option>
+                    <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High</option>
+                    <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma</option>
+                    <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor</option>
+                  </select>
+                  {wizardStep2Errors.wizardAcademicLevel && <p className="text-xs text-red-600">{wizardStep2Errors.wizardAcademicLevel}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">
+                    {wizardAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "Strand" : "Course"}
+                  </label>
+                  <select
+                    value={wizardCourse}
+                    onChange={(e) => setWizardCourse(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    disabled={!wizardAcademicLevel}
+                  >
+                    <option value="">Select...</option>
+                    {wizardCourses.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  {wizardStep2Errors.wizardCourse && <p className="text-xs text-red-600">{wizardStep2Errors.wizardCourse}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">
+                    {wizardAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "Grade" : "Year"}
+                  </label>
+                  <select
+                    value={wizardYear}
+                    onChange={(e) => setWizardYear(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    disabled={!wizardAcademicLevel || !wizardCourse}
+                  >
+                    <option value="">Select...</option>
+                    {wizardYears.map((y) => {
+                      const count = getBucketStudentCount(wizardAcademicLevel, wizardCourse, String(y))
+                      return (
+                        <option key={y} value={y}>
+                          {y} ({count} Students)
+                        </option>
+                      )
+                    })}
+                  </select>
+                  {wizardStep2Errors.wizardYear && <p className="text-xs text-red-600">{wizardStep2Errors.wizardYear}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Teacher</label>
+                  <select
+                    value={wizardTeacherId}
+                    onChange={(e) => setWizardTeacherId(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    disabled={!wizardAcademicLevel || !wizardCourse || !wizardYear}
+                  >
+                    <option value="">Select...</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.firstName} {t.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  {wizardStep2Errors.wizardTeacherId && <p className="text-xs text-red-600">{wizardStep2Errors.wizardTeacherId}</p>}
                 </div>
               </div>
-            )}
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setWizardStep(1)
+                    setWizardCreatedSubject(null)
+                  }}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleWizardAssignSubject}
+                  disabled={!wizardAcademicLevel || !wizardCourse || !wizardYear || !wizardTeacherId || !wizardCreatedSubject}
+                >
+                  Add Subject to Course & Year
+                </Button>
+              </div>
+
+              {wizardAcademicLevel && wizardCourse && wizardYear && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Subjects for selection</CardTitle>
+                    <CardDescription>
+                      {wizardAcademicLevel} • {wizardCourse} • {wizardYear}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {wizardAssignedSubjects.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No subjects assigned yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {wizardAssignedSubjects.map((s: any) => (
+                          <div key={s.id} className="p-3 border rounded flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold">{s.code}</p>
+                              <p className="text-xs text-muted-foreground">{s.name}</p>
+                              <p className="text-xs text-muted-foreground">Teacher: {s.assignedTeacherName}</p>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {s.day} • {s.time}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Class Assignment</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Subject Code</label>
+              <Input value={editCode} onChange={(e) => setEditCode(e.target.value)} />
+              {editErrors.editCode && <p className="text-xs text-red-600">{editErrors.editCode}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Subject Name</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+              {editErrors.editName && <p className="text-xs text-red-600">{editErrors.editName}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Academic Level</label>
+              <select
+                value={editAcademicLevel}
+                onChange={(e) => {
+                  setEditAcademicLevel(e.target.value as any)
+                  setEditCourse("")
+                  setEditYear("")
+                }}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select...</option>
+                <option value={ACADEMIC_LEVELS.SENIOR_HIGH}>Senior High</option>
+                <option value={ACADEMIC_LEVELS.DIPLOMA}>Diploma</option>
+                <option value={ACADEMIC_LEVELS.BACHELOR}>Bachelor</option>
+              </select>
+              {editErrors.editAcademicLevel && <p className="text-xs text-red-600">{editErrors.editAcademicLevel}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">{editAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "Strand" : "Course"}</label>
+              <select value={editCourse} onChange={(e) => setEditCourse(e.target.value)} className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                {editCourses.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              {editErrors.editCourse && <p className="text-xs text-red-600">{editErrors.editCourse}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">{editAcademicLevel === ACADEMIC_LEVELS.SENIOR_HIGH ? "Grade" : "Year"}</label>
+              <select value={editYear} onChange={(e) => setEditYear(e.target.value)} className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                {editYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              {editErrors.editYear && <p className="text-xs text-red-600">{editErrors.editYear}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Teacher</label>
+              <select value={editTeacherId} onChange={(e) => setEditTeacherId(e.target.value)} className="w-full p-2 border rounded">
+                <option value="">Select...</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
+                ))}
+              </select>
+              {editErrors.editTeacherId && <p className="text-xs text-red-600">{editErrors.editTeacherId}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Start Time</label>
+              <select value={editTimeStart} onChange={(e) => setEditTimeStart(e.target.value)} className="w-full p-2 border rounded">
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">End Time</label>
+              <select value={editTimeEnd} onChange={(e) => setEditTimeEnd(e.target.value)} className="w-full p-2 border rounded">
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {editErrors.editTime && <p className="text-xs text-red-600">{editErrors.editTime}</p>}
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium">Days</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-1">
+                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
+                  <label key={day} className="flex items-center gap-2 text-sm border rounded px-3 py-2 bg-background">
+                    <input
+                      type="checkbox"
+                      checked={editDays.includes(day)}
+                      onChange={(e) => {
+                        if (e.target.checked) setEditDays((prev) => [...prev, day])
+                        else setEditDays((prev) => prev.filter((d) => d !== day))
+                      }}
+                    />
+                    {day}
+                  </label>
+                ))}
+              </div>
+              {editErrors.editDays && <p className="text-xs text-red-600">{editErrors.editDays}</p>}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit}>Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>

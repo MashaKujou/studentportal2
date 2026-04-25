@@ -81,16 +81,6 @@ export const TeacherDashboardHome = () => {
                 Enter Grades
               </Button>
             </Link>
-            <Link href="/teacher/attendance-marking">
-              <Button variant="outline" className="w-full bg-transparent">
-                Mark Attendance
-              </Button>
-            </Link>
-            <Link href="/teacher/materials">
-              <Button variant="outline" className="w-full bg-transparent">
-                Upload Materials
-              </Button>
-            </Link>
           </div>
         </CardContent>
       </Card>

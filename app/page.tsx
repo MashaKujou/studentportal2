@@ -6,7 +6,7 @@ import { useAuth } from "@/app/contexts/auth-context"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { GraduationCap, BookOpen, Users, FileText, Calendar, BarChart, Award, MessageSquare } from "lucide-react"
+import { GraduationCap, BookOpen, Users, FileText, BarChart, Award, MessageSquare } from "lucide-react"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()
@@ -67,8 +67,8 @@ export default function HomePage() {
               Your Complete Academic Management Platform
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground text-pretty mb-8 leading-relaxed">
-              Streamline education management for students, teachers, and administrators. Track grades, manage
-              attendance, and collaborate seamlessly in one powerful platform.
+              Streamline education management for students, teachers, and administrators. Track grades and collaborate
+              seamlessly in one powerful platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
@@ -104,16 +104,12 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">For Students</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Access grades, track attendance, view schedules, and manage your academic documents all in one place.
+                  Access grades, view schedules, and manage your academic documents all in one place.
                 </p>
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                     View grades and transcripts
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    Track attendance records
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -138,20 +134,12 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">For Teachers</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Manage classes, input grades, mark attendance, and track student progress with powerful analytics.
+                  Manage classes, input grades, and track student progress with powerful analytics.
                 </p>
                 <ul className="space-y-2 mb-6 text-sm">
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                     Grade input and approval
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    Attendance management
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    Upload course materials
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -225,14 +213,6 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Attendance Tracking</h3>
-              <p className="text-sm text-muted-foreground">Real-time attendance marking and comprehensive reporting</p>
-            </div>
-
-            <div className="text-center">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
               <h3 className="font-semibold mb-2">Document Management</h3>
               <p className="text-sm text-muted-foreground">Upload, organize, and access academic documents securely</p>
             </div>
@@ -261,14 +241,6 @@ export default function HomePage() {
               <p className="text-sm text-muted-foreground">
                 Create and manage classes with flexible enrollment options
               </p>
-            </div>
-
-            <div className="text-center">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold mb-2">Course Materials</h3>
-              <p className="text-sm text-muted-foreground">Share resources and materials with students easily</p>
             </div>
 
             <div className="text-center">

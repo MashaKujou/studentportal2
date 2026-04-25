@@ -198,6 +198,7 @@ export const STORAGE_KEYS = {
   GRADES: "student_portal_grades",
   ATTENDANCE: "student_portal_attendance",
   REQUESTS: "student_portal_requests",
+  COURSE_SUBJECTS: "student_portal_course_subjects",
   MESSAGES: "student_portal_messages",
   NOTIFICATIONS: "student_portal_notifications",
   SCHEDULES: "student_portal_schedules",

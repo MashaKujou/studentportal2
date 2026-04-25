@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/contexts/auth-context"
-import { classesStorage, userStorage } from "@/lib/storage"
+import { teacherService } from "@/app/services/teacher-service"
 import { useMemo } from "react"
 import Link from "next/link"
 
@@ -16,13 +16,10 @@ export const ClassDetails = ({ classId }: ClassDetailsProps) => {
 
   const classData = useMemo(() => {
     if (!user || !classId) return null
-    const allClasses = classesStorage.getAll()
-    const cls = allClasses.find((c) => c.id === classId)
-    if (!cls || cls.teacherId !== user.id) return null
-
-    // Get student details
-    const students = userStorage.getStudents()
-    const classStudents = students.filter((s) => cls.students.includes(s.id))
+    const teacherClasses = teacherService.getMyClasses(user.id)
+    const cls = teacherClasses.find((c) => c.id === classId)
+    if (!cls) return null
+    const classStudents = teacherService.getClassStudents(classId)
 
     return {
       ...cls,
@@ -79,7 +76,7 @@ export const ClassDetails = ({ classId }: ClassDetailsProps) => {
             <div>
               <p className="text-sm text-muted-foreground">Term</p>
               <p className="font-semibold">
-                Semester {classData.semester}, Year {classData.year}
+                {classData.courseOrStrand}, Year {classData.yearOrGrade}
               </p>
             </div>
           </div>
@@ -114,11 +111,6 @@ export const ClassDetails = ({ classId }: ClassDetailsProps) => {
       <div className="grid grid-cols-2 gap-4">
         <Link href={`/teacher/grade-input?classId=${classId}`}>
           <Button className="w-full">Enter Grades</Button>
-        </Link>
-        <Link href={`/teacher/attendance?classId=${classId}`}>
-          <Button variant="outline" className="w-full bg-transparent">
-            Mark Attendance
-          </Button>
         </Link>
       </div>
     </div>

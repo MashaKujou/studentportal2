@@ -11,8 +11,6 @@ import {
   LayoutDashboard,
   BookOpen,
   PenTool,
-  CheckCircle,
-  FileText,
   BarChart3,
 } from "lucide-react"
 
@@ -27,8 +25,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ children }) 
     { label: "Dashboard", href: "/teacher/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: "Classes", href: "/teacher/classes", icon: <BookOpen className="w-5 h-5" /> },
     { label: "Grades", href: "/teacher/grade-input", icon: <PenTool className="w-5 h-5" /> },
-    { label: "Attendance", href: "/teacher/attendance-marking", icon: <CheckCircle className="w-5 h-5" /> },
-    { label: "Materials", href: "/teacher/materials", icon: <FileText className="w-5 h-5" /> },
     { label: "Analytics", href: "/teacher/analytics", icon: <BarChart3 className="w-5 h-5" /> },
   ]
 

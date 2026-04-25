@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from "@/lib/constants"
-import { storage, classesStorage, userStorage } from "@/lib/storage"
+import { storage, classesStorage, courseSubjectsStorage, subjectStorage, userStorage } from "@/lib/storage"
 import { generateId } from "@/lib/helpers"
 
 export interface Class {
@@ -25,14 +25,19 @@ export interface ClassGrade {
   createdAt: string
 }
 
-export interface Material {
+export interface TeacherAssignedClass {
   id: string
+  subjectId: string
+  subjectCode: string
+  subjectName: string
   teacherId: string
-  classId: string
-  title: string
-  url: string
-  type: string
-  uploadedAt: string
+  teacherName: string
+  academicLevel: "senior_high" | "diploma" | "bachelor"
+  courseOrStrand: string
+  yearOrGrade: string
+  day: string
+  time: string
+  students: string[]
 }
 
 export const teacherService = {
@@ -73,30 +78,62 @@ export const teacherService = {
     return newGrade
   },
 
-  // Material operations
-  getMaterials: (classId: string): Material[] => {
-    const materials = storage.get<Material[]>("teacher_materials") || []
-    return materials.filter((m) => m.classId === classId)
-  },
+  getMyClasses: (teacherId: string): TeacherAssignedClass[] => {
+    const buckets = courseSubjectsStorage.getAll()
+    const subjects = subjectStorage.getAll()
+    const subjectById = new Map(subjects.map((s) => [s.id, s]))
+    const students = userStorage.getStudents()
+    const teacher = userStorage.getTeachers().find((t) => t.id === teacherId)
+    const teacherName = teacher ? `${teacher.firstName} ${teacher.lastName}`.trim() : "Unknown Teacher"
 
-  uploadMaterial: (material: Omit<Material, "id" | "uploadedAt">): Material => {
-    const newMaterial: Material = {
-      ...material,
-      id: generateId("MAT"),
-      uploadedAt: new Date().toISOString(),
+    const matchesBucket = (student: any, bucket: any) => {
+      if (student.status !== "approved") return false
+      if (bucket.academicLevel === "senior_high") {
+        return (
+          student.academicLevel === "senior_high" &&
+          student.strand === bucket.courseOrStrand &&
+          student.grade === bucket.yearOrGrade
+        )
+      }
+      return (
+        student.academicLevel === bucket.academicLevel &&
+        student.course === bucket.courseOrStrand &&
+        student.year === bucket.yearOrGrade
+      )
     }
-    const materials = storage.get<Material[]>("teacher_materials") || []
-    materials.push(newMaterial)
-    storage.set("teacher_materials", materials)
-    return newMaterial
-  },
 
-  getMyClasses: (teacherId: string) => {
-    return classesStorage.getByTeacherId(teacherId)
+    const rows: TeacherAssignedClass[] = []
+    buckets.forEach((bucket) => {
+      const assignments = bucket.subjectAssignments || bucket.subjectIds.map((subjectId) => ({ subjectId, teacherId: "" }))
+      assignments
+        .filter((a) => a.teacherId === teacherId)
+        .forEach((a) => {
+          const subject = subjectById.get(a.subjectId)
+          if (!subject) return
+          const bucketStudents = students.filter((s) => matchesBucket(s, bucket)).map((s) => s.id)
+
+          rows.push({
+            id: `${bucket.id}:${subject.id}`,
+            subjectId: subject.id,
+            subjectCode: subject.code,
+            subjectName: subject.name,
+            teacherId,
+            teacherName,
+            academicLevel: bucket.academicLevel,
+            courseOrStrand: bucket.courseOrStrand,
+            yearOrGrade: bucket.yearOrGrade,
+            day: subject.day,
+            time: subject.time,
+            students: bucketStudents,
+          })
+        })
+    })
+
+    return rows
   },
 
   getTeacherAnalytics: (teacherId: string) => {
-    const classes = classesStorage.getByTeacherId(teacherId)
+    const classes = teacherService.getMyClasses(teacherId)
     const allGrades = storage.get<any[]>(STORAGE_KEYS.GRADES) || []
 
     const analytics = {
@@ -115,22 +152,25 @@ export const teacherService = {
   },
 
   getClassStudents: (classId: string) => {
-    const classes = classesStorage.getAll()
-    const classItem = classes.find((c) => c.id === classId)
-    if (!classItem) return []
-
+    const [bucketId, subjectId] = classId.split(":")
+    const bucket = courseSubjectsStorage.getAll().find((b) => b.id === bucketId)
+    if (!bucket || !subjectId) return []
     const students = userStorage.getStudents()
-    return students.filter((s) => classItem.students.includes(s.id))
-  },
-
-  recordAttendance: (classId: string, attendanceData: any): void => {
-    const attendance = storage.get<any[]>(STORAGE_KEYS.ATTENDANCE) || []
-    attendance.push({
-      ...attendanceData,
-      id: generateId("ATT"),
-      classId,
-      createdAt: new Date().toISOString(),
-    })
-    storage.set(STORAGE_KEYS.ATTENDANCE, attendance)
+    if (bucket.academicLevel === "senior_high") {
+      return students.filter(
+        (s) =>
+          s.status === "approved" &&
+          s.academicLevel === "senior_high" &&
+          s.strand === bucket.courseOrStrand &&
+          s.grade === bucket.yearOrGrade,
+      )
+    }
+    return students.filter(
+      (s) =>
+        s.status === "approved" &&
+        s.academicLevel === bucket.academicLevel &&
+        s.course === bucket.courseOrStrand &&
+        s.year === bucket.yearOrGrade,
+    )
   },
 }

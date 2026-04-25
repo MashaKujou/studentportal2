@@ -18,7 +18,6 @@ export const AdminAnalytics = () => {
   }
   const studentAnalytics = {}
   const feedbackAnalytics = {}
-  const attendanceAnalytics = {}
 
   return (
     <div className="space-y-6">
@@ -28,10 +27,9 @@ export const AdminAnalytics = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
         </TabsList>
 
@@ -127,47 +125,6 @@ export const AdminAnalytics = () => {
                 <div className="flex justify-between">
                   <span>Rejected:</span>
                   <Badge variant="destructive">{studentAnalytics?.rejected || 0}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Attendance Tab */}
-        <TabsContent value="attendance" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Attendance Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Records:</span>
-                  <span className="font-semibold">{attendanceAnalytics?.totalRecords || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Average Attendance Rate:</span>
-                  <span className="font-semibold text-green-600">{attendanceAnalytics?.avgRate || 0}%</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Status Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Present:</span>
-                  <Badge variant="default" className="bg-green-600">{attendanceAnalytics?.present || 0}</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span>Absent:</span>
-                  <Badge variant="destructive">{attendanceAnalytics?.absent || 0}</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span>Late:</span>
-                  <Badge variant="secondary">{attendanceAnalytics?.late || 0}</Badge>
                 </div>
               </CardContent>
             </Card>

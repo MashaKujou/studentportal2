@@ -139,6 +139,16 @@ export interface Class {
   createdAt: string
 }
 
+export interface CourseSubjectBucket {
+  id: string
+  academicLevel: "senior_high" | "diploma" | "bachelor"
+  courseOrStrand: string
+  yearOrGrade: string
+  subjectIds: string[]
+  subjectAssignments?: { subjectId: string; teacherId: string }[]
+  updatedAt: string
+}
+
 export interface RequestMessage {
   id: string
   requestId: string
@@ -371,6 +381,15 @@ export const subjectStorage = {
     return subjectStorage.getAll().find((s) => s.code === code)
   },
 
+  update: (id: string, updates: Partial<Subject>): void => {
+    const subjects = subjectStorage.getAll()
+    const index = subjects.findIndex((s) => s.id === id)
+    if (index !== -1) {
+      subjects[index] = { ...subjects[index], ...updates }
+      storage.set("subjects", subjects)
+    }
+  },
+
   delete: (id: string): void => {
     const subjects = subjectStorage.getAll()
     storage.set(
@@ -407,6 +426,123 @@ export const classesStorage = {
       "classes",
       classes.filter((c) => c.id !== id),
     )
+  },
+}
+
+export const courseSubjectsStorage = {
+  getAll: (): CourseSubjectBucket[] => {
+    return storage.get<CourseSubjectBucket[]>(STORAGE_KEYS.COURSE_SUBJECTS) || []
+  },
+
+  getBucket: (academicLevel: CourseSubjectBucket["academicLevel"], courseOrStrand: string, yearOrGrade: string) => {
+    return courseSubjectsStorage
+      .getAll()
+      .find(
+        (b) =>
+          b.academicLevel === academicLevel &&
+          b.courseOrStrand === courseOrStrand &&
+          b.yearOrGrade === yearOrGrade,
+      )
+  },
+
+  addSubjectToBucket: (
+    academicLevel: CourseSubjectBucket["academicLevel"],
+    courseOrStrand: string,
+    yearOrGrade: string,
+    subjectId: string,
+    teacherId: string,
+  ) => {
+    const all = courseSubjectsStorage.getAll()
+    const idx = all.findIndex(
+      (b) =>
+        b.academicLevel === academicLevel &&
+        b.courseOrStrand === courseOrStrand &&
+        b.yearOrGrade === yearOrGrade,
+    )
+
+    const now = new Date().toISOString()
+    if (idx === -1) {
+      all.push({
+        id: generateId("CSB"),
+        academicLevel,
+        courseOrStrand,
+        yearOrGrade,
+        subjectIds: [subjectId],
+        subjectAssignments: [{ subjectId, teacherId }],
+        updatedAt: now,
+      })
+    } else {
+      const existing = new Set(all[idx].subjectIds)
+      existing.add(subjectId)
+      const prevAssignments = all[idx].subjectAssignments || all[idx].subjectIds.map((id) => ({ subjectId: id, teacherId: "" }))
+      const bySubjectId = new Map(prevAssignments.map((a) => [a.subjectId, a]))
+      bySubjectId.set(subjectId, { subjectId, teacherId })
+
+      all[idx] = {
+        ...all[idx],
+        subjectIds: Array.from(existing),
+        subjectAssignments: Array.from(bySubjectId.values()),
+        updatedAt: now,
+      }
+    }
+
+    storage.set(STORAGE_KEYS.COURSE_SUBJECTS, all)
+  },
+
+  removeSubjectFromBucket: (
+    academicLevel: CourseSubjectBucket["academicLevel"],
+    courseOrStrand: string,
+    yearOrGrade: string,
+    subjectId: string,
+  ) => {
+    const all = courseSubjectsStorage.getAll()
+    const next = all
+      .map((bucket) => {
+        if (
+          bucket.academicLevel !== academicLevel ||
+          bucket.courseOrStrand !== courseOrStrand ||
+          bucket.yearOrGrade !== yearOrGrade
+        ) {
+          return bucket
+        }
+
+        const subjectIds = bucket.subjectIds.filter((id) => id !== subjectId)
+        const subjectAssignments = (bucket.subjectAssignments || []).filter((a) => a.subjectId !== subjectId)
+        return {
+          ...bucket,
+          subjectIds,
+          subjectAssignments,
+          updatedAt: new Date().toISOString(),
+        }
+      })
+      .filter((bucket) => bucket.subjectIds.length > 0)
+
+    storage.set(STORAGE_KEYS.COURSE_SUBJECTS, next)
+  },
+
+  moveOrUpdateSubjectAssignment: (params: {
+    oldAcademicLevel: CourseSubjectBucket["academicLevel"]
+    oldCourseOrStrand: string
+    oldYearOrGrade: string
+    newAcademicLevel: CourseSubjectBucket["academicLevel"]
+    newCourseOrStrand: string
+    newYearOrGrade: string
+    subjectId: string
+    teacherId: string
+  }) => {
+    const {
+      oldAcademicLevel,
+      oldCourseOrStrand,
+      oldYearOrGrade,
+      newAcademicLevel,
+      newCourseOrStrand,
+      newYearOrGrade,
+      subjectId,
+      teacherId,
+    } = params
+
+    courseSubjectsStorage.removeSubjectFromBucket(oldAcademicLevel, oldCourseOrStrand, oldYearOrGrade, subjectId)
+    courseSubjectsStorage.addSubjectToBucket(newAcademicLevel, newCourseOrStrand, newYearOrGrade, subjectId, teacherId)
   },
 }
 

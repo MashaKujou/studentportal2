@@ -2,13 +2,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { requestMessagesStorage, userStorage } from "@/lib/storage"
+import { userStorage } from "@/lib/storage"
 import { useEffect, useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 import { REQUEST_TYPES_COLLEGE } from "@/lib/constants"
 import { Download, FileText } from 'lucide-react'
 import { studentService } from "@/app/services/student-service"
+import Link from "next/link"
 
 const statusMessages: { [key: string]: string } = {
   pending: "Your Request is still Pending",
@@ -21,7 +21,6 @@ const statusMessages: { [key: string]: string } = {
 export const RequestManagement = () => {
   const [filterStatus, setFilterStatus] = useState("pending")
   const [selectedRequest, setSelectedRequest] = useState<any>(null)
-  const [replyMessage, setReplyMessage] = useState("")
   const [newRequestType, setNewRequestType] = useState("")
   const [selectedStudent, setSelectedStudent] = useState("")
   const [showAddRequest, setShowAddRequest] = useState(false)
@@ -64,10 +63,6 @@ export const RequestManagement = () => {
     return () => clearInterval(interval)
   }, [])
 
-  const getRequestMessages = (requestId: string) => {
-    return requestMessagesStorage.getByRequestId(requestId)
-  }
-
   const handleSelectRequest = (req: any) => {
     setSelectedRequest(req)
     if (req.status === "pending") {
@@ -75,19 +70,6 @@ export const RequestManagement = () => {
       setSelectedRequest({ ...req, status: "read" })
       setRefreshKey((k) => k + 1)
     }
-  }
-
-  const handleReply = () => {
-    if (!selectedRequest || !replyMessage.trim()) return
-
-    requestMessagesStorage.add({
-      requestId: selectedRequest.id,
-      senderId: "admin",
-      senderRole: "admin",
-      message: replyMessage.trim(),
-    })
-    setReplyMessage("")
-    setRefreshKey((k) => k + 1)
   }
 
   const handleStatusChange = (newStatus: string) => {
@@ -108,6 +90,15 @@ export const RequestManagement = () => {
     setNewRequestType("")
     setSelectedStudent("")
     setShowAddRequest(false)
+    setRefreshKey((k) => k + 1)
+  }
+
+  const handleDeleteRequest = () => {
+    if (!selectedRequest) return
+    const ok = window.confirm("Delete this request? This cannot be undone.")
+    if (!ok) return
+    studentService.deleteRequest(selectedRequest.id)
+    setSelectedRequest(null)
     setRefreshKey((k) => k + 1)
   }
 
@@ -368,26 +359,14 @@ export const RequestManagement = () => {
                       <option value="rejected">Rejected</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Messages:</p>
-                    <div className="bg-muted p-3 rounded max-h-32 overflow-y-auto text-xs space-y-2">
-                      {getRequestMessages(selectedRequest.id).map((msg: any) => (
-                        <div key={msg.id}>
-                          <p className="font-semibold capitalize">{msg.senderRole}:</p>
-                          <p>{msg.message}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <Textarea
-                    placeholder="Reply to request..."
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    className="min-h-20"
-                  />
-                  <Button onClick={handleReply} className="w-full">
-                    Send Reply
+                  <Button variant="destructive" onClick={handleDeleteRequest} className="w-full">
+                    Delete Request
                   </Button>
+                  <Link href={`/admin/messages?requestId=${encodeURIComponent(selectedRequest.id)}`} className="block">
+                    <Button variant="outline" className="w-full">
+                      Open Messages
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             )}

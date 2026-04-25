@@ -151,6 +151,12 @@ export const studentService = {
     setRequestsData(updated)
   },
 
+  deleteRequest: (requestId: string) => {
+    const requests = getRequestsData()
+    const updated = requests.filter((r: Request) => r.id !== requestId)
+    setRequestsData(updated)
+  },
+
   // =========================
   // 📚 SCHEDULE
   // =========================
