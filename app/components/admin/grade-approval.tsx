@@ -42,18 +42,14 @@ export const GradeApproval = () => {
     })
     loadPendingGrades()
     setSelectedGrade(null)
+    setRejectReason("")
     alert("Grade approved successfully!")
   }
 
   const handleReject = (gradeId: string) => {
-    if (!rejectReason.trim()) {
-      alert("Please provide a reason for rejection")
-      return
-    }
-
     gradesStorage.update(gradeId, {
       status: "rejected",
-      rejectedReason: rejectReason,
+      rejectedReason: rejectReason.trim() || undefined,
       approvedAt: new Date().toISOString(),
       approvedBy: user?.id,
     })
@@ -171,7 +167,10 @@ export const GradeApproval = () => {
                       </div>
                       <div className="flex justify-end">
                         <Button
-                          onClick={() => setSelectedGrade(null)} 
+                          onClick={() => {
+                            setSelectedGrade(null)
+                            setRejectReason("")
+                          }}
                           className="h-10 px-6 font-medium text-foreground hover:bg-muted transition-colors"
                         >
                           Cancel
@@ -180,7 +179,10 @@ export const GradeApproval = () => {
                     </div>
                   ) : (
                     <Button 
-                      onClick={() => setSelectedGrade(grade)} 
+                      onClick={() => {
+                        setSelectedGrade(grade)
+                        setRejectReason("")
+                      }}
                       className="w-full mt-2 h-10 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-colors"
                     >
                       Review Grade
