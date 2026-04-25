@@ -9,10 +9,12 @@ import { ACADEMIC_LEVELS, BACHELOR_YEARS, DIPLOMA_YEARS, SENIOR_HIGH_GRADES, SEN
 import {
   collegeCoursesStorage,
   financialStorage,
+  storage,
   type FinancialFeeAssignment,
   type FinancialPaymentStatus,
   type Student,
 } from "@/lib/storage"
+import { messagingService } from "@/app/services/messaging-service"
 
 type AssignmentFormState = {
   title: string
@@ -56,6 +58,7 @@ const formatCurrency = (amount: number) =>
 const formatDate = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString()
 
 const getStudentDisplayName = (student: Student) => `${student.firstName} ${student.lastName}`.trim()
+const ADMIN_NOTIFICATION_BOARD_KEY = "student_portal_admin_notifications_board"
 
 export const FinancialManagement = () => {
   const [refreshKey, setRefreshKey] = useState(0)
@@ -210,7 +213,7 @@ export const FinancialManagement = () => {
       return
     }
 
-    financialStorage.add({
+    const newAssignment = financialStorage.add({
       title: formData.title.trim(),
       description: formData.description.trim(),
       academicLevel: formData.academicLevel,
@@ -220,6 +223,31 @@ export const FinancialManagement = () => {
       amount,
       dueDate: formData.dueDate || undefined,
     })
+    const matchedStudents = financialStorage.getStudentsForAssignment(newAssignment)
+    const notificationTitle = `Finance finalized: ${newAssignment.title}`
+    const notificationMessage = `${newAssignment.targetName} Year ${newAssignment.gradeOrYear} has new fee (${formatCurrency(newAssignment.amount)}).`
+
+    matchedStudents.forEach((student) => {
+      messagingService.createNotification({
+        userId: student.id,
+        type: "info",
+        title: notificationTitle,
+        message: notificationMessage,
+        targetPath: "/student/financial",
+      })
+    })
+
+    const currentBoard = storage.get<any[]>(ADMIN_NOTIFICATION_BOARD_KEY) || []
+    currentBoard.unshift({
+      id: `AN-${Date.now()}`,
+      title: notificationTitle,
+      desc: notificationMessage,
+      audience: "finance",
+      createdAt: new Date().toISOString(),
+      financeCourseOrStrand: newAssignment.targetName,
+      financeYear: newAssignment.gradeOrYear,
+    })
+    storage.set(ADMIN_NOTIFICATION_BOARD_KEY, currentBoard)
 
     setRefreshKey((current) => current + 1)
     setIsCreateDialogOpen(false)

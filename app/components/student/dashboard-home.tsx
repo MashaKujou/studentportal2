@@ -10,6 +10,16 @@ import { useMemo } from "react"
 
 export const StudentDashboardHome = () => {
   const { user } = useAuth()
+  const academicGroup = useMemo(() => {
+    if (!user) return { gradeLabel: "-", sectionLabel: "-" }
+    const isSeniorHigh = (user as any).academicLevel === "senior_high"
+    const courseOrStrand = isSeniorHigh ? (user as any).strand : (user as any).course
+    const yearOrGrade = isSeniorHigh ? (user as any).grade : (user as any).year
+    return {
+      gradeLabel: courseOrStrand || "-",
+      sectionLabel: yearOrGrade || "-",
+    }
+  }, [user])
 
   const stats = useMemo(() => {
     if (!user) return { grades: 0, requests: 0 }
@@ -29,7 +39,7 @@ export const StudentDashboardHome = () => {
       <div>
         <h1 className="text-3xl font-bold">Welcome, {user.firstName} {user.middleName ? `${user.middleName} ` : ""}{user.lastName}</h1>
         <p className="text-muted-foreground mt-2">
-          Grade {(user as any).grade} - Section {(user as any).section}
+          {academicGroup.gradeLabel} - {academicGroup.sectionLabel}
         </p>
       </div>
 

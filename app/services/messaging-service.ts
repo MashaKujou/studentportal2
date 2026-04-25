@@ -18,6 +18,7 @@ export interface Notification {
   type: "info" | "success" | "warning" | "error"
   title: string
   message: string
+  targetPath?: string
   isRead: boolean
   createdAt: string
 }

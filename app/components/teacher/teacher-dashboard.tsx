@@ -12,6 +12,7 @@ import {
   BookOpen,
   PenTool,
   BarChart3,
+  Bell,
 } from "lucide-react"
 
 interface TeacherDashboardProps {
@@ -25,6 +26,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ children }) 
     { label: "Dashboard", href: "/teacher/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: "Classes", href: "/teacher/classes", icon: <BookOpen className="w-5 h-5" /> },
     { label: "Grades", href: "/teacher/grade-input", icon: <PenTool className="w-5 h-5" /> },
+    { label: "Notifications", href: "/teacher/notifications", icon: <Bell className="w-5 h-5" /> },
     { label: "Analytics", href: "/teacher/analytics", icon: <BarChart3 className="w-5 h-5" /> },
   ]
 

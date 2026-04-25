@@ -15,10 +15,7 @@ import {
   FileText,
   HelpCircle,
   DollarSign,
-  Library,
   Bell,
-  MessageSquare,
-  MessageCircle,
 } from "lucide-react"
 
 interface StudentDashboardProps {
@@ -36,10 +33,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ children }) 
     { label: "Documents", href: "/student/documents", icon: <FileText className="w-5 h-5" /> },
     { label: "Requests", href: "/student/requests", icon: <HelpCircle className="w-5 h-5" /> },
     { label: "Financial", href: "/student/financial", icon: <DollarSign className="w-5 h-5" /> },
-    { label: "Library", href: "/student/library", icon: <Library className="w-5 h-5" /> },
     { label: "Notifications", href: "/student/notifications", icon: <Bell className="w-5 h-5" /> },
-    { label: "Feedback", href: "/student/feedback", icon: <MessageSquare className="w-5 h-5" /> },
-    { label: "Contact Admin", href: "/student/contact-admin", icon: <MessageCircle className="w-5 h-5" /> },
   ]
 
   return (
