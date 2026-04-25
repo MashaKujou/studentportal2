@@ -134,17 +134,19 @@ export const teacherService = {
 
   getTeacherAnalytics: (teacherId: string) => {
     const classes = teacherService.getMyClasses(teacherId)
+    const classIds = new Set(classes.map((c) => c.id))
     const allGrades = storage.get<any[]>(STORAGE_KEYS.GRADES) || []
+    const teacherGrades = allGrades.filter((g) => g.teacherId === teacherId || classIds.has(g.classId))
 
     const analytics = {
       totalClasses: classes.length,
       totalStudents: classes.reduce((sum, c) => sum + c.students.length, 0),
-      gradesEntered: allGrades.length,
+      gradesEntered: teacherGrades.length,
       averageGrade: 0,
     }
 
-    if (allGrades.length > 0) {
-      const avg = allGrades.reduce((sum, g: any) => sum + (g.score || 0), 0) / allGrades.length
+    if (teacherGrades.length > 0) {
+      const avg = teacherGrades.reduce((sum, g: any) => sum + (g.score || 0), 0) / teacherGrades.length
       analytics.averageGrade = Math.round(avg * 100) / 100
     }
 

@@ -6,7 +6,7 @@ import { useAuth } from "@/app/contexts/auth-context"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { GraduationCap, BookOpen, Users, FileText, BarChart, Award, MessageSquare } from "lucide-react"
+import { GraduationCap, BookOpen, Users, FileText, Calendar, BarChart, Award, MessageSquare } from "lucide-react"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()

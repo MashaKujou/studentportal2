@@ -11,14 +11,15 @@ export const TeacherAnalytics = () => {
 
   const stats = useMemo(() => {
     if (!user) return null
-    const classes = teacherService.getClasses(user.id)
-    const students = classes.reduce((acc, cls) => acc + (cls.students?.length || 0), 0)
+    const analytics = teacherService.getTeacherAnalytics(user.id)
+    const classes = teacherService.getMyClasses(user.id)
+    const students = analytics.totalStudents
 
     return {
-      totalClasses: classes.length,
+      totalClasses: analytics.totalClasses,
       totalStudents: students,
       averageClassSize: classes.length > 0 ? Math.round(students / classes.length) : 0,
-      activeClasses: classes.filter((cls) => cls.active).length,
+      gradesEntered: analytics.gradesEntered,
     }
   }, [user])
 
@@ -74,12 +75,12 @@ export const TeacherAnalytics = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
-              Active Classes
+              Grades Entered
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeClasses || 0}</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
+            <div className="text-2xl font-bold">{stats?.gradesEntered || 0}</div>
+            <p className="text-xs text-muted-foreground">Total submitted</p>
           </CardContent>
         </Card>
       </div>

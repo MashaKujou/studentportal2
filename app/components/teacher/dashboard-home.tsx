@@ -12,14 +12,14 @@ export const TeacherDashboardHome = () => {
 
   const stats = useMemo(() => {
     if (!user) return { classes: 0, students: 0, gradesToday: 0 }
-    const classes = teacherService.getClasses(user.id)
-    const totalStudents = classes.reduce((acc, c) => acc + c.studentCount, 0)
-    const grades = classes.flatMap((c) => teacherService.getGradesByClass(c.id))
+    const classes = teacherService.getMyClasses(user.id)
+    const totalStudents = classes.reduce((acc, c) => acc + c.students.length, 0)
+    const analytics = teacherService.getTeacherAnalytics(user.id)
 
     return {
       classes: classes.length,
       students: totalStudents,
-      gradesToday: grades.length,
+      gradesToday: analytics.gradesEntered,
     }
   }, [user])
 
@@ -33,7 +33,8 @@ export const TeacherDashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Link href="/teacher/classes" className="block">
+        <Card className="cursor-pointer hover:bg-muted/40 transition-colors">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Classes</CardTitle>
           </CardHeader>
@@ -42,8 +43,10 @@ export const TeacherDashboardHome = () => {
             <p className="text-xs text-muted-foreground mt-1">Teaching</p>
           </CardContent>
         </Card>
+        </Link>
 
-        <Card>
+        <Link href="/teacher/classes" className="block">
+        <Card className="cursor-pointer hover:bg-muted/40 transition-colors">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Students</CardTitle>
           </CardHeader>
@@ -52,8 +55,10 @@ export const TeacherDashboardHome = () => {
             <p className="text-xs text-muted-foreground mt-1">Across all classes</p>
           </CardContent>
         </Card>
+        </Link>
 
-        <Card>
+        <Link href="/teacher/grade-input" className="block">
+        <Card className="cursor-pointer hover:bg-muted/40 transition-colors">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Grades Entered</CardTitle>
           </CardHeader>
@@ -62,6 +67,7 @@ export const TeacherDashboardHome = () => {
             <p className="text-xs text-muted-foreground mt-1">Total grades</p>
           </CardContent>
         </Card>
+        </Link>
       </div>
 
       <Card>

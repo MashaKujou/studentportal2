@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { gradesStorage, userStorage, type Grade } from "@/lib/storage"
 import { useAuth } from "@/app/contexts/auth-context"
+import { Check, X } from "lucide-react"
 
 export const GradeApproval = () => {
   const { user } = useAuth()
@@ -138,7 +139,8 @@ export const GradeApproval = () => {
 
                   {selectedGrade?.id === grade.id ? (
                     <div className="space-y-2 pt-2 border-t">
-                      <div>
+                      <div className="flex gap-3 items-start">
+                        <div className="flex-1">
                         <label className="block text-sm font-medium mb-1">Reason for Rejection (optional)</label>
                         <textarea
                           value={rejectReason}
@@ -147,21 +149,28 @@ export const GradeApproval = () => {
                           rows={2}
                           placeholder="Provide feedback if rejecting..."
                         />
+                        </div>
+                        <div className="flex flex-col gap-2 pt-6">
+                          <Button
+                            onClick={() => handleApprove(grade.id)}
+                            className="h-9 w-9 p-0 bg-green-600 hover:bg-green-700 text-white"
+                            title="Approve"
+                            aria-label="Approve"
+                          >
+                            <Check className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            onClick={() => handleReject(grade.id)}
+                            className="h-9 w-9 p-0 bg-red-600 hover:bg-red-700 text-white"
+                            title="Reject"
+                            aria-label="Reject"
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-3">
-                        <Button 
-                          onClick={() => handleApprove(grade.id)} 
-                          className="flex-1 h-10 font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md transition-all duration-200"
-                        >
-                          Approve
-                        </Button>
-                        <Button 
-                          onClick={() => handleReject(grade.id)} 
-                          className="flex-1 h-10 font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all duration-200"
-                        >
-                          Reject
-                        </Button>
-                        <Button 
+                      <div className="flex justify-end">
+                        <Button
                           onClick={() => setSelectedGrade(null)} 
                           className="h-10 px-6 font-medium text-foreground hover:bg-muted transition-colors"
                         >

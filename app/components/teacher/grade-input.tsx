@@ -1,12 +1,28 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/app/contexts/auth-context"
 import { useState, useEffect } from "react"
 import { gradesStorage } from "@/lib/storage"
 import { teacherService } from "@/app/services/teacher-service"
+
+const COLLEGE_GRADE_EQUIVALENTS = [
+  { label: "1.0", min: 98, max: 100, suggestedScore: 98 },
+  { label: "1.25", min: 95, max: 97, suggestedScore: 95 },
+  { label: "1.50", min: 92, max: 94, suggestedScore: 92 },
+  { label: "1.75", min: 89, max: 91, suggestedScore: 89 },
+  { label: "2.00", min: 86, max: 88, suggestedScore: 86 },
+  { label: "2.25", min: 83, max: 85, suggestedScore: 83 },
+  { label: "2.50", min: 80, max: 82, suggestedScore: 80 },
+  { label: "2.75", min: 77, max: 79, suggestedScore: 77 },
+  { label: "3.00", min: 75, max: 76, suggestedScore: 75 },
+  { label: "5.00", min: 0, max: 74, suggestedScore: 74 },
+] as const
+
+const COLLEGE_SPECIAL_MARKS = ["NYC", "DRP"] as const
 
 export const TeacherGradeInput = () => {
   const { user } = useAuth()
@@ -15,8 +31,11 @@ export const TeacherGradeInput = () => {
   const [selectedSemester, setSelectedSemester] = useState<"1st Semester" | "2nd Semester">("1st Semester")
   const [selectedTerm, setSelectedTerm] = useState<"Prelim" | "Midterm" | "PreFinals" | "Finals">("Prelim")
   const [studentGrades, setStudentGrades] = useState<Record<string, number>>({})
+  const [studentSpecialMarks, setStudentSpecialMarks] = useState<Record<string, "NYC" | "DRP">>({})
   const [students, setStudents] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const selectedClassData = classes.find((c) => c.id === selectedClass)
+  const isCollegeClass = selectedClassData?.academicLevel === "diploma" || selectedClassData?.academicLevel === "bachelor"
 
   useEffect(() => {
     if (user) {
@@ -41,21 +60,70 @@ export const TeacherGradeInput = () => {
           gradesMap[grade.studentId] = grade.score
         })
         setStudentGrades(gradesMap)
+        setStudentSpecialMarks({})
       }
     }
   }, [selectedClass, selectedSemester, selectedTerm, classes])
 
   const handleGradeChange = (studentId: string, score: string) => {
+    const normalizedValue = score.trim().toUpperCase()
+    if (isCollegeClass && (normalizedValue === "NYC" || normalizedValue === "DRP")) {
+      setStudentSpecialMarks((prev) => ({ ...prev, [studentId]: normalizedValue }))
+      setStudentGrades((prev) => {
+        const newGrades = { ...prev }
+        delete newGrades[studentId]
+        return newGrades
+      })
+      return
+    }
+
     const numScore = parseFloat(score)
     if (!isNaN(numScore) && numScore >= 0 && numScore <= 100) {
       setStudentGrades((prev) => ({ ...prev, [studentId]: numScore }))
+      setStudentSpecialMarks((prev) => {
+        const next = { ...prev }
+        delete next[studentId]
+        return next
+      })
     } else if (score === "") {
       setStudentGrades((prev) => {
         const newGrades = { ...prev }
         delete newGrades[studentId]
         return newGrades
       })
+      setStudentSpecialMarks((prev) => {
+        const next = { ...prev }
+        delete next[studentId]
+        return next
+      })
     }
+  }
+
+  const convertToCollegeEquivalent = (score?: number) => {
+    if (score === undefined || Number.isNaN(score)) return "-"
+    const match = COLLEGE_GRADE_EQUIVALENTS.find((range) => score >= range.min && score <= range.max)
+    return match ? match.label : "-"
+  }
+
+  const handleCollegeChipDrop = (studentId: string, chipValue: string) => {
+    if (chipValue === "NYC" || chipValue === "DRP") {
+      setStudentSpecialMarks((prev) => ({ ...prev, [studentId]: chipValue }))
+      setStudentGrades((prev) => {
+        const next = { ...prev }
+        delete next[studentId]
+        return next
+      })
+      return
+    }
+
+    const selectedRange = COLLEGE_GRADE_EQUIVALENTS.find((item) => item.label === chipValue)
+    if (!selectedRange) return
+    setStudentGrades((prev) => ({ ...prev, [studentId]: selectedRange.suggestedScore }))
+    setStudentSpecialMarks((prev) => {
+      const next = { ...prev }
+      delete next[studentId]
+      return next
+    })
   }
 
   const calculateAverage = (studentId: string) => {
@@ -187,6 +255,39 @@ export const TeacherGradeInput = () => {
           {selectedClass && students.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-semibold">Enter Student Grades (0-100)</h3>
+              {isCollegeClass && (
+                <div className="space-y-2 rounded-md border p-3 bg-muted/20">
+                  <p className="text-sm font-medium">College quick chips (drag to grade field)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {COLLEGE_GRADE_EQUIVALENTS.map((item) => (
+                      <Badge
+                        key={item.label}
+                        variant="secondary"
+                        className="cursor-grab active:cursor-grabbing"
+                        draggable
+                        onDragStart={(event) => event.dataTransfer.setData("text/plain", item.label)}
+                        title={`${item.min}-${item.max}`}
+                      >
+                        {item.label}
+                      </Badge>
+                    ))}
+                    {COLLEGE_SPECIAL_MARKS.map((mark) => (
+                      <Badge
+                        key={mark}
+                        variant="outline"
+                        className="cursor-grab active:cursor-grabbing"
+                        draggable
+                        onDragStart={(event) => event.dataTransfer.setData("text/plain", mark)}
+                      >
+                        {mark}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    NYC = Not Yet Completed, DRP = Drop. Numeric score still submitted for approval.
+                  </p>
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -194,6 +295,7 @@ export const TeacherGradeInput = () => {
                       <th className="text-left p-2">Student ID</th>
                       <th className="text-left p-2">Name</th>
                       <th className="text-left p-2">Grade</th>
+                      {isCollegeClass && <th className="text-left p-2">College Eq.</th>}
                       <th className="text-left p-2">Semester Average</th>
                     </tr>
                   </thead>
@@ -205,17 +307,37 @@ export const TeacherGradeInput = () => {
                           {student.firstName} {student.lastName}
                         </td>
                         <td className="p-2">
-                          <Input
-                            type="number"
-                            placeholder="0-100"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            value={studentGrades[student.id] || ""}
-                            onChange={(e) => handleGradeChange(student.id, e.target.value)}
-                            className="w-24"
-                          />
+                          <div
+                            onDragOver={(event) => {
+                              if (isCollegeClass) event.preventDefault()
+                            }}
+                            onDrop={(event) => {
+                              if (!isCollegeClass) return
+                              event.preventDefault()
+                              handleCollegeChipDrop(student.id, event.dataTransfer.getData("text/plain"))
+                            }}
+                          >
+                            <Input
+                              type={isCollegeClass ? "text" : "number"}
+                              placeholder={isCollegeClass ? "0-100 / NYC / DRP" : "0-100"}
+                              min={isCollegeClass ? undefined : "0"}
+                              max={isCollegeClass ? undefined : "100"}
+                              step={isCollegeClass ? undefined : "0.01"}
+                              value={studentSpecialMarks[student.id] || studentGrades[student.id] || ""}
+                              onChange={(e) => handleGradeChange(student.id, e.target.value)}
+                              className="w-32"
+                            />
+                          </div>
                         </td>
+                        {isCollegeClass && (
+                          <td className="p-2">
+                            {studentSpecialMarks[student.id] ? (
+                              <Badge variant="outline">{studentSpecialMarks[student.id]}</Badge>
+                            ) : (
+                              <span className="font-medium">{convertToCollegeEquivalent(studentGrades[student.id])}</span>
+                            )}
+                          </td>
+                        )}
                         <td className="p-2 font-semibold">{calculateAverage(student.id)}</td>
                       </tr>
                     ))}
