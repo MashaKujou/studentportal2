@@ -3,11 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { userStorage } from "@/lib/storage"
-import { useMemo, useState } from "react"
+import { requestMessagesStorage, userStorage } from "@/lib/storage"
+import { useEffect, useMemo, useState } from "react"
 import { formatDate } from "@/lib/formatters"
 import { REQUEST_TYPES_COLLEGE } from "@/lib/constants"
 import { Download, FileText } from 'lucide-react'
+import { studentService } from "@/app/services/student-service"
 
 const statusMessages: { [key: string]: string } = {
   pending: "Your Request is still Pending",
@@ -30,14 +31,25 @@ export const RequestManagement = () => {
   const [academicLevelFilter, setAcademicLevelFilter] = useState("all")
 
   const requests = useMemo(() => {
-    // Placeholder for requests - since we're using localStorage only
-    // Return empty array or implement localStorage-based request storage
-    return []
+    const allRequests = studentService.getAllRequests()
+    const studentsById = new Map(
+      userStorage.getStudents().map((student) => [
+        student.id,
+        `${student.firstName} ${student.lastName}`.trim(),
+      ]),
+    )
+
+    const hydrated = allRequests.map((request) => ({
+      ...request,
+      studentName: studentsById.get(request.studentId) || "Unknown Student",
+    }))
+
+    return hydrated.filter((request) => request.status === filterStatus)
   }, [filterStatus, refreshKey])
 
   const students = useMemo(() => {
     return userStorage.getStudents()
-  }, [])
+  }, [refreshKey])
 
   const allDocuments = useMemo(() => {
     // For now, return empty array as document storage is not implemented in localStorage
@@ -47,25 +59,52 @@ export const RequestManagement = () => {
 
   const documentTypes = ["Transcript", "Certificate", "Transfer Certificate", "Leave Letter", "Identity Card Photo", "Admission Letter"]
 
+  useEffect(() => {
+    const interval = setInterval(() => setRefreshKey((k) => k + 1), 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const getRequestMessages = (requestId: string) => {
+    return requestMessagesStorage.getByRequestId(requestId)
+  }
+
   const handleSelectRequest = (req: any) => {
-    // Placeholder implementation - requests not implemented yet
     setSelectedRequest(req)
-    setRefreshKey((k) => k + 1)
+    if (req.status === "pending") {
+      studentService.updateRequestStatus(req.id, "read")
+      setSelectedRequest({ ...req, status: "read" })
+      setRefreshKey((k) => k + 1)
+    }
   }
 
   const handleReply = () => {
-    // Placeholder implementation - requests not implemented yet
+    if (!selectedRequest || !replyMessage.trim()) return
+
+    requestMessagesStorage.add({
+      requestId: selectedRequest.id,
+      senderId: "admin",
+      senderRole: "admin",
+      message: replyMessage.trim(),
+    })
     setReplyMessage("")
+    setRefreshKey((k) => k + 1)
   }
 
   const handleStatusChange = (newStatus: string) => {
-    // Placeholder implementation - requests not implemented yet
+    if (!selectedRequest) return
+    studentService.updateRequestStatus(selectedRequest.id, newStatus as any)
     setRefreshKey((k) => k + 1)
-    setSelectedRequest(null)
+    setSelectedRequest({ ...selectedRequest, status: newStatus })
   }
 
   const handleAddRequest = () => {
-    // Placeholder implementation - requests not implemented yet
+    if (!selectedStudent || !newRequestType) return
+    studentService.createRequest({
+      studentId: selectedStudent,
+      type: newRequestType,
+      reason: "Request created by admin",
+      status: "pending",
+    })
     setNewRequestType("")
     setSelectedStudent("")
     setShowAddRequest(false)
@@ -332,7 +371,7 @@ export const RequestManagement = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Messages:</p>
                     <div className="bg-muted p-3 rounded max-h-32 overflow-y-auto text-xs space-y-2">
-                      {[].map((msg: any) => (
+                      {getRequestMessages(selectedRequest.id).map((msg: any) => (
                         <div key={msg.id}>
                           <p className="font-semibold capitalize">{msg.senderRole}:</p>
                           <p>{msg.message}</p>

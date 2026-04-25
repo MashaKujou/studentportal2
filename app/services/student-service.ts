@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from "@/lib/constants"
+
 export interface Grade {
   id: string
   studentId: string
@@ -58,6 +60,28 @@ const setData = (key: string, value: any) => {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
+const getRequestsData = (): Request[] => {
+  const scopedRequests = getData(STORAGE_KEYS.REQUESTS)
+  const legacyRequests = getData("requests")
+  const combined = [...scopedRequests, ...legacyRequests]
+  const uniqueById = new Map<string, Request>()
+  combined.forEach((req: Request) => {
+    const normalizedId = req?.id || `REQ_${Math.random().toString(36).slice(2, 11)}`
+    uniqueById.set(normalizedId, {
+      ...req,
+      id: normalizedId,
+      createdAt: req?.createdAt || new Date().toISOString(),
+    })
+  })
+  return Array.from(uniqueById.values())
+}
+
+const setRequestsData = (requests: Request[]) => {
+  setData(STORAGE_KEYS.REQUESTS, requests)
+  // Keep legacy key in sync for older pages/data.
+  setData("requests", requests)
+}
+
 export const studentService = {
   // =========================
   // 📊 GRADES
@@ -91,18 +115,27 @@ export const studentService = {
   // 📝 REQUESTS
   // =========================
   getRequests: (studentId: string): Request[] => {
-    const requests = getData("requests")
+    const requests = getRequestsData()
     return requests.filter((r: Request) => r.studentId === studentId)
   },
 
-  createRequest: (request: Request) => {
-    const requests = getData("requests")
-    requests.push(request)
-    setData("requests", requests)
+  getAllRequests: (): Request[] => {
+    return getRequestsData()
+  },
+
+  createRequest: (request: Omit<Request, "id" | "createdAt"> & Partial<Pick<Request, "id" | "createdAt">>) => {
+    const requests = getRequestsData()
+    const newRequest: Request = {
+      ...request,
+      id: request.id || `REQ_${Math.random().toString(36).slice(2, 11)}`,
+      createdAt: request.createdAt || new Date().toISOString(),
+    }
+    requests.push(newRequest)
+    setRequestsData(requests)
   },
 
   updateRequestStatus: (requestId: string, status: Request["status"]) => {
-    const requests = getData("requests")
+    const requests = getRequestsData()
 
     const updated = requests.map((r: Request) => {
       if (r.id === requestId) {
@@ -115,7 +148,7 @@ export const studentService = {
       return r
     })
 
-    setData("requests", updated)
+    setRequestsData(updated)
   },
 
   // =========================
