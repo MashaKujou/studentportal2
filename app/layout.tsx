@@ -9,25 +9,24 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "CSA Student Portal",
+  description: "Official Student Portal for College of Saint Amatiel",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
+        url: "/image.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/icon-dark-32x32.png",
+        url: "/image.png",
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/image.png",
+        type: "image/png",
       },
     ],
-    apple: "/apple-icon.png",
+    apple: "/image.png",
   },
 }
 
