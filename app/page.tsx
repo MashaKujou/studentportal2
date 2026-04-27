@@ -197,7 +197,7 @@ export default function HomePage() {
           <div className="about-block reveal" style={{ marginTop: '5rem' }}>
             <div className="about-img-wrap" style={{ position: 'relative' }}>
               <img src={aboutImages[aboutImageIndex]} alt="About CSA" />
-              <div className="about-img-badge">2010<span>Est.</span></div>
+              <div className="about-img-badge">2008<span>Est.</span></div>
               <button
                 onClick={() => setAboutImageIndex((prev) => (prev - 1 + aboutImages.length) % aboutImages.length)}
                 style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
@@ -225,7 +225,7 @@ export default function HomePage() {
               </p>
               <div className="about-stats">
                 <div className="stat-item">
-                  <span className="stat-num">17</span>
+                  <span className="stat-num">18</span>
                   <span className="stat-label">Years of Service</span>
                 </div>
                 <div className="stat-item">
