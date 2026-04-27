@@ -91,8 +91,8 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Bachelor of Science',
     desc: 'Entrepreneurship',
     duration: '4-Year Program',
-    coverImg: '/course_pics/entrep.png',
-    modalImg: '/course_pics/entrep_modal.png',
+    coverImg: '/course_pics/bse.png',
+    modalImg: '/course_pics/collegeModal/bse.png',
     fullDesc: 'Develops skills in starting, managing, and scaling businesses, fostering a strong entrepreneurial mindset.'
   },
   {
@@ -108,7 +108,7 @@ export const programsInfo: ProgramInfo[] = [
   },
   {
     id: 'dhrt',
-    name: 'DHRT',
+    name: 'Hotel and Restaurant Technology',
     category: 'College',
     badge: 'Diploma',
     desc: 'Diploma in Hotel and Restaurant Technology',
