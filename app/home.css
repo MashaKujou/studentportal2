@@ -128,17 +128,8 @@ html { scroll-behavior: smooth; }
 #faculty .section-title { color: var(--navy); }
 #faculty .section-label { color: var(--gold); }
 .faculty-container { max-width: 1100px; margin: 0 auto; }
-.zoom-controls { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
-.zoom-btn { width: 36px; height: 36px; border: 1.5px solid var(--navy2); border-radius: 8px; background: var(--white); color: var(--navy); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-.zoom-btn:hover { background: var(--navy); color: var(--white); }
-.zoom-label { font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .06em; min-width: 50px; text-align: center; }
-.zoom-reset { padding: .35rem 1rem; border: 1.5px solid var(--navy2); border-radius: 6px; background: transparent; color: var(--navy); font-size: .8rem; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .04em; }
-.zoom-reset:hover { background: var(--navy); color: var(--white); }
-.faculty-frame { width: 100%; height: 540px; border: 2px solid rgba(11,31,58,.18); border-radius: var(--radius); overflow: hidden; background: var(--white); position: relative; cursor: grab; user-select: none; }
-.faculty-frame:active { cursor: grabbing; }
-.faculty-frame-hint { position: absolute; bottom: 1rem; right: 1rem; background: rgba(11,31,58,.75); color: rgba(247,242,232,.85); padding: .35rem .8rem; border-radius: 6px; font-size: .72rem; letter-spacing: .06em; pointer-events: none; z-index: 5; }
-.faculty-canvas { position: absolute; transform-origin: 0 0; will-change: transform; }
-.org-chart-img { display: block; }
+.faculty-frame { width: 100%; border: 2px solid rgba(11,31,58,.18); border-radius: var(--radius); overflow: hidden; background: var(--white); display: flex; justify-content: center; align-items: center; padding: 1.5rem; }
+.org-chart-img { max-width: 100%; height: auto; display: block; }
 
 #programs { background: var(--navy2); padding: 6rem 1.5rem; }
 #programs .section-title { color: var(--white); }

@@ -5,7 +5,8 @@ export interface ProgramInfo {
   badge: string;
   desc: string;
   duration: string;
-  image: string;
+  coverImg: string;
+  modalImg?: string;
   fullDesc: string;
   requirements?: string[];
 }
@@ -18,7 +19,7 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Senior High School Track (Academic Strand)',
     desc: 'Accountancy, Business and Management',
     duration: '2-Year Program',
-    image: '/course_pics/abm.png',
+    coverImg: '/course_pics/abm.png',
     fullDesc: 'The ABM strand is designed for students who intend to take up business courses in college. Focuses on financial management, business management, corporate operations, and accounting.'
   },
   {
@@ -28,7 +29,7 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Senior High School Track (Academic Strand)',
     desc: 'General Academic Strand',
     duration: '2-Year Program',
-    image: '/course_pics/gas.png',
+    coverImg: '/course_pics/gas.png',
     fullDesc: 'GAS offers a mix of subjects from other academic strands, providing a well-rounded foundation for various college degrees.'
   },
   {
@@ -38,7 +39,7 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Senior High School Track (Academic Strand)',
     desc: 'Humanities and Social Sciences',
     duration: '2-Year Program',
-    image: '/course_pics/humss.png',
+    coverImg: '/course_pics/humss.png',
     fullDesc: 'HUMSS is for students looking into degrees in journalism, communication arts, liberal arts, education, and other social science-related courses.'
   },
   {
@@ -48,7 +49,7 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Senior High School Track (Tech-Voc Strand)',
     desc: 'Home Economics',
     duration: '2-Year Program',
-    image: '/course_pics/he.png',
+    coverImg: '/course_pics/he.png',
     fullDesc: 'Provides skills in hospitality, tourism, and culinary arts, preparing students for National Certificate (NC) assessments.'
   },
   {
@@ -58,7 +59,7 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Senior High School Track (Tech-Voc Strand)',
     desc: 'Information and Communications Technology',
     duration: '2-Year Program',
-    image: '/course_pics/ict.png',
+    coverImg: '/course_pics/ict.png',
     fullDesc: 'Equips students with skills in computer programming, animation, and web design.'
   },
   {
@@ -68,7 +69,19 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Bachelor of Science',
     desc: 'Management Accounting',
     duration: '4-Year Program',
-    image: '/course_pics/bsma.png',
+    coverImg: '/course_pics/bsma.png',
+    modalImg: '/course_pics/collegeModal/bsma.png',
+    fullDesc: 'Provides solid business management skills coupled with an understanding of financial operations and strategic decision-making.'
+  },
+  {
+    id: 'btvted',
+    name: 'Technical-Vocational Teacher Education',
+    category: 'College',
+    badge: 'Bachelor of Science',
+    desc: 'Technical-Vocational Teacher Education',
+    duration: '4-Year Program',
+    coverImg: '/course_pics/btvted.png',
+    modalImg: '/course_pics/collegeModal/btvted.png',
     fullDesc: 'Provides solid business management skills coupled with an understanding of financial operations and strategic decision-making.'
   },
   {
@@ -76,9 +89,10 @@ export const programsInfo: ProgramInfo[] = [
     name: 'Entrepreneurship',
     category: 'College',
     badge: 'Bachelor of Science',
-    desc: 'Business and Entrepreneurship',
+    desc: 'Entrepreneurship',
     duration: '4-Year Program',
-    image: '/course_pics/entrep.png',
+    coverImg: '/course_pics/entrep.png',
+    modalImg: '/course_pics/entrep_modal.png',
     fullDesc: 'Develops skills in starting, managing, and scaling businesses, fostering a strong entrepreneurial mindset.'
   },
   {
@@ -88,7 +102,8 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Diploma',
     desc: 'IT Diploma Program',
     duration: '3-Year Program',
-    image: '/course_pics/it-diploma.png',
+    coverImg: '/course_pics/dit.png',
+    modalImg: '/course_pics/dit_modal.png',
     fullDesc: 'Focuses on practical IT skills including networking, software development, and systems administration.'
   },
   {
@@ -98,7 +113,8 @@ export const programsInfo: ProgramInfo[] = [
     badge: 'Diploma',
     desc: 'Diploma in Hotel and Restaurant Technology',
     duration: '3-Year Program',
-    image: '/course_pics/dhrt.png',
+    coverImg: '/course_pics/dhrt.png',
+    modalImg: '/course_pics/dhrt_modal.png',
     fullDesc: 'Prepares students for the hospitality industry with intensive training in food and beverage service, housekeeping, and front office operations.'
   }
 ];
@@ -111,7 +127,7 @@ export const tesdaprogramsInfo: ProgramInfo[] = [
     badge: 'National Certificate II',
     desc: 'Collaborative Robot Programming',
     duration: 'Short Course',
-    image: '/course_pics/tesda_CoBot.png',
+    coverImg: '/course_pics/tesda_CoBot.png',
     fullDesc: "This program equips individuals with the necessary skills to plan, coordinate, and execute events such as conferences, corporate events, and exhibitions.",
     requirements: [
       'At lease SHS Graduate',
@@ -133,7 +149,7 @@ export const tesdaprogramsInfo: ProgramInfo[] = [
     badge: 'National Certificate III',
     desc: 'Events Management',
     duration: 'Short Course',
-    image: '/course_pics/tesda_eventmanagement.png',
+    coverImg: '/course_pics/tesda_eventmanagement.png',
     fullDesc: 'This program equips individuals with the necessary skills to plan, coordinate, and execute events such as conferences, corporate events, and exhibitions.',
     requirements: [
       'At lease SHS Graduate',
@@ -155,7 +171,7 @@ export const tesdaprogramsInfo: ProgramInfo[] = [
     badge: 'National Certificate III',
     desc: 'Bread & Pastry Production',
     duration: 'Short Course',
-    image: '/course_pics/tesda_bpp.png',
+    coverImg: '/course_pics/tesda_bpp.png',
     fullDesc: 'This program equips individuals with the necessary skills to plan, coordinate, and execute events such as conferences, corporate events, and exhibitions.',
     requirements: [
       'At lease SHS Graduate',
@@ -177,7 +193,7 @@ export const tesdaprogramsInfo: ProgramInfo[] = [
     badge: 'National Certificate II',
     desc: 'Computer System Servicing',
     duration: 'Short Course',
-    image: '/course_pics/tesda_CSS.png',
+    coverImg: '/course_pics/tesda_CSS.png',
     fullDesc: 'This program equips individuals with the necessary skills to plan, coordinate, and execute events such as conferences, corporate events, and exhibitions.',
     requirements: [
       'At lease SHS Graduate',

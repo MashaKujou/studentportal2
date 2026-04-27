@@ -45,161 +45,7 @@ export default function HomePage() {
     };
   }, [])
 
-  const frameRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLDivElement>(null)
-  const [scaleDisplay, setScaleDisplay] = useState(100)
 
-  useEffect(() => {
-    if (isLoading) return;
-    const frame = frameRef.current;
-    const canvas = canvasRef.current;
-    if (!frame || !canvas) return;
-
-    const PADDING = 20;
-    let currentScale = 1, ox = PADDING, oy = PADDING;
-    let dragging = false, startX = 0, startY = 0, startOX = 0, startOY = 0;
-
-    const apply = () => {
-      const fw = frame.clientWidth;
-      const fh = frame.clientHeight;
-      const cw = canvas.scrollWidth * currentScale;
-      const ch = canvas.scrollHeight * currentScale;
-
-      if (cw > fw) {
-        ox = Math.min(PADDING, Math.max(ox, fw - cw - PADDING));
-      } else {
-        ox = Math.max(PADDING, Math.min(ox, fw - cw - PADDING));
-      }
-
-      if (ch > fh) {
-        oy = Math.min(PADDING, Math.max(oy, fh - ch - PADDING));
-      } else {
-        oy = Math.max(PADDING, Math.min(oy, fh - ch - PADDING));
-      }
-
-      canvas.style.transform = `translate(${ox}px, ${oy}px) scale(${currentScale})`;
-      setScaleDisplay(Math.round(currentScale * 100));
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.15 : -0.15;
-      currentScale = Math.min(Math.max(currentScale + delta, 0.3), 3);
-      apply();
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      dragging = true;
-      startX = e.clientX; startY = e.clientY;
-      startOX = ox; startOY = oy;
-      frame.style.cursor = 'grabbing';
-      e.preventDefault();
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!dragging) return;
-      ox = startOX + (e.clientX - startX);
-      oy = startOY + (e.clientY - startY);
-      apply();
-    };
-
-    const handleMouseUp = () => {
-      dragging = false;
-      frame.style.cursor = 'grab';
-    };
-
-    // touch support
-    let lastDist: number | null = null;
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        dragging = true;
-        startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-        startOX = ox; startOY = oy;
-      }
-      if (e.touches.length === 2) {
-        lastDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-      }
-      if (e.cancelable) e.preventDefault();
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1 && dragging) {
-        ox = startOX + (e.touches[0].clientX - startX);
-        oy = startOY + (e.touches[0].clientY - startY);
-        apply();
-      }
-      if (e.touches.length === 2 && lastDist !== null) {
-        const dist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        currentScale = Math.min(Math.max(currentScale * (dist / lastDist), 0.3), 3);
-        lastDist = dist;
-        apply();
-      }
-      if (e.cancelable) e.preventDefault();
-    };
-    const handleTouchEnd = () => {
-      dragging = false;
-      lastDist = null;
-    };
-
-    frame.addEventListener('wheel', handleWheel, { passive: false });
-    frame.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    frame.addEventListener('touchstart', handleTouchStart, { passive: false });
-    frame.addEventListener('touchmove', handleTouchMove, { passive: false });
-    frame.addEventListener('touchend', handleTouchEnd);
-
-    const autoFit = () => {
-      const img = canvas.querySelector('img');
-      if (!img) return;
-      const fw = frame.clientWidth;
-      const fh = frame.clientHeight;
-      
-      if (!img.complete || img.naturalWidth === 0) {
-        img.addEventListener('load', autoFit, { once: true });
-        return;
-      }
-      
-      const cw = img.naturalWidth;
-      const ch = img.naturalHeight;
-      
-      if (cw > 0 && ch > 0) {
-        const scaleX = (fw - PADDING * 2) / cw;
-        const scaleY = (fh - PADDING * 2) / ch;
-        currentScale = Math.max(Math.min(scaleX, scaleY, 1), 0.1);
-        
-        ox = (fw - cw * currentScale) / 2;
-        oy = (fh - ch * currentScale) / 2;
-        apply();
-      }
-    };
-
-    autoFit();
-
-    // expose zoom controls to window so buttons can use it
-    (window as any).__zoomIn = () => { currentScale = Math.min(currentScale + 0.2, 3); apply(); };
-    (window as any).__zoomOut = () => { currentScale = Math.max(currentScale - 0.2, 0.1); apply(); };
-    (window as any).__zoomReset = () => { autoFit(); };
-
-    return () => {
-      frame.removeEventListener('wheel', handleWheel);
-      frame.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      frame.removeEventListener('touchstart', handleTouchStart);
-      frame.removeEventListener('touchmove', handleTouchMove);
-      frame.removeEventListener('touchend', handleTouchEnd);
-      delete (window as any).__zoomIn;
-      delete (window as any).__zoomOut;
-      delete (window as any).__zoomReset;
-    };
-  }, [isLoading]);
 
   if (isLoading) {
     return (
@@ -301,7 +147,7 @@ export default function HomePage() {
           {/* Hymn Panel */}
           <div className={`mv-panel ${activeTab === 'hymn' ? 'active' : ''} reveal`} id="panel-hymn" >
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              
+
               <div className="mv-icon-box" style={{ margin: '0 auto 1.5rem' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
@@ -312,32 +158,32 @@ export default function HomePage() {
               <h3 className="mv-text-title">Saint Amatiel Hymn</h3>
 
               <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
-                Hail Alma Mater, St. Amatiel <br/>
-                All the skills you bring us <br/>
+                Hail Alma Mater, St. Amatiel <br />
+                All the skills you bring us <br />
                 We know we can show it
               </p>
 
               <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
-                Hail Alma Mater, St. Amatiel. <br/>
-                All the things we do here <br/>
-                We know we can prove it <br/>
+                Hail Alma Mater, St. Amatiel. <br />
+                All the things we do here <br />
+                We know we can prove it <br />
                 We know we can prove it
               </p>
 
               <h3 className="mv-text-title" style={{ marginTop: '1.5rem' }}>Chorus</h3>
 
               <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
-                All the laughter and the tears <br/>
-                Make us better person here <br/>
-                There's no greater care than this <br/>
-                You have taught our talent here <br/>
-                You have filled our experience <br/>
+                All the laughter and the tears <br />
+                Make us better person here <br />
+                There's no greater care than this <br />
+                You have taught our talent here <br />
+                You have filled our experience <br />
                 What can we miss when we're gone!
               </p>
 
               <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
-                Hail Alma Mater, St. Amatiel <br/>
-                All the things we gain here <br/>
+                Hail Alma Mater, St. Amatiel <br />
+                All the things we gain here <br />
                 We know we can prove it
               </p>
 
@@ -353,7 +199,7 @@ export default function HomePage() {
             <div className="about-img-wrap" style={{ position: 'relative' }}>
               <img src={aboutImages[aboutImageIndex]} alt="About CSA" />
               <div className="about-img-badge">2010<span>Est.</span></div>
-              <button 
+              <button
                 onClick={() => setAboutImageIndex((prev) => (prev - 1 + aboutImages.length) % aboutImages.length)}
                 style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
                 onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
@@ -361,7 +207,7 @@ export default function HomePage() {
               >
                 ❮
               </button>
-              <button 
+              <button
                 onClick={() => setAboutImageIndex((prev) => (prev + 1) % aboutImages.length)}
                 style={{ position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
                 onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
@@ -404,10 +250,10 @@ export default function HomePage() {
               Discover a wide range of undergraduate and graduate programs designed to equip you for the careers of tomorrow.
             </p>
             <div className="programs-filter">
-              <button className={`filter-btn ${progFilter === 'All' ? 'active' : ''}`} onClick={() => setProgFilter('All')}>All Programs</button>
+              <button className={`filter-btn ${progFilter === 'All' ? 'active' : ''}`} onClick={() => setProgFilter('All')}>All Strands | Courses</button>
               <button className={`filter-btn ${progFilter === 'SHS' ? 'active' : ''}`} onClick={() => setProgFilter('SHS')}>SHS Strands</button>
               <button className={`filter-btn ${progFilter === 'College' ? 'active' : ''}`} onClick={() => setProgFilter('College')}>College</button>
-              <button className={`filter-btn ${progFilter === 'Tesda' ? 'active' : ''}`} onClick={() => setProgFilter('Tesda')}>Tesda</button>
+              <button className={`filter-btn ${progFilter === 'Tesda' ? 'active' : ''}`} onClick={() => setProgFilter('Tesda')}>Tesda Programs</button>
             </div>
           </div>
           <div className="programs-grid reveal">
@@ -415,8 +261,8 @@ export default function HomePage() {
               .filter(p => progFilter === 'All' || p.category === progFilter)
               .map(prog => (
                 <div key={prog.id} className="prog-card" onClick={() => setSelectedProgram(prog)}>
-                  {prog.image ? (
-                    <img src={prog.image} className="prog-img" alt={prog.name} />
+                  {prog.coverImg ? (
+                    <img src={prog.coverImg} className="prog-img" alt={prog.name} />
                   ) : (
                     <div className="prog-img" style={{ background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(247,242,232,.3)' }}>CSA Program</div>
                   )}
@@ -443,27 +289,12 @@ export default function HomePage() {
           <div className="reveal">
             <div className="section-label">Our People</div>
             <h2 className="section-title">Faculty Organizational Chart</h2>
-            <div className="section-underline" style={{ background: 'var(--gold)' }}></div>
-            <p style={{ fontSize: '.95rem', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: 1.7 }}>
-              Use the controls to zoom · Drag to pan · Scroll to zoom
-            </p>
+            <div className="section-underline" style={{ background: 'var(--gold)', marginBottom: '3rem' }}></div>
           </div>
 
           <div className="reveal">
-            {/* Zoom Controls */}
-            <div className="zoom-controls">
-              <button className="zoom-btn" onClick={() => (window as any).__zoomIn?.()}>+</button>
-              <button className="zoom-btn" onClick={() => (window as any).__zoomOut?.()}>−</button>
-              <span className="zoom-label">{scaleDisplay}%</span>
-              <button className="zoom-reset" onClick={() => (window as any).__zoomReset?.()}>Reset View</button>
-            </div>
-
-            {/* Pannable / Zoomable Frame */}
-            <div className="faculty-frame" id="facultyFrame" ref={frameRef}>
-              <div className="faculty-canvas" id="facultyCanvas" ref={canvasRef}>
-                <img src="/org_chart.png" alt="Faculty Organizational Chart" className="org-chart-img" draggable="false" />
-              </div>
-              <div className="faculty-frame-hint">🔍 Scroll to zoom · Drag to pan</div>
+            <div className="faculty-frame">
+              <img src="/org_chart.png" alt="Faculty Organizational Chart" className="org-chart-img" />
             </div>
           </div>
         </div>
@@ -484,7 +315,7 @@ export default function HomePage() {
             <div className="footer-divider-gold"></div>
             <p className="footer-tagline">Forming Hearts. Shaping Futures. Serving the community through faith, learning, and excellence since 2010.</p>
             <div className="footer-contact" style={{ marginTop: '1.25rem' }}>
-              <div>📍 <br/>118 Int. Gen. Luna St, Malabon, 1470 Metro Manila</div>
+              <div>📍 <br />118 Int. Gen. Luna St, Malabon, 1470 Metro Manila</div>
               <div>📞 (02) 8351 4993</div>
             </div>
           </div>
@@ -498,7 +329,7 @@ export default function HomePage() {
               <li><a href="#">Faculty & Staff</a></li>
               <li><a href="#">News & Events</a></li>
               <li><a href="#">Alumni</a></li>
-            </ul> 
+            </ul>
           </div>
 
           <div>
@@ -524,6 +355,13 @@ export default function HomePage() {
         <div className="modal-overlay" onClick={() => setSelectedProgram(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelectedProgram(null)}>×</button>
+
+            {selectedProgram.category === 'College' && selectedProgram.modalImg && (
+              <div style={{ marginBottom: '1.5rem', borderRadius: '8px', overflow: 'hidden' }}>
+                <img src={selectedProgram.modalImg} alt={selectedProgram.name} style={{ width: '100%', height: '500px', objectFit: 'cover', display: 'block' }} />
+              </div>
+            )}
+
             <span className="modal-badge">{selectedProgram.badge}</span>
             <h3 className="modal-title">{selectedProgram.name}</h3>
             <div className="modal-subtitle">{selectedProgram.desc}</div>
