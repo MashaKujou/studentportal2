@@ -103,7 +103,7 @@ export const programsInfo: ProgramInfo[] = [
     desc: 'IT Diploma Program',
     duration: '3-Year Program',
     coverImg: '/course_pics/dit.png',
-    modalImg: '/course_pics/dit_modal.png',
+    modalImg: '/course_pics/collegeModal/dit.png',
     fullDesc: 'Focuses on practical IT skills including networking, software development, and systems administration.'
   },
   {
@@ -114,7 +114,7 @@ export const programsInfo: ProgramInfo[] = [
     desc: 'Diploma in Hotel and Restaurant Technology',
     duration: '3-Year Program',
     coverImg: '/course_pics/dhrt.png',
-    modalImg: '/course_pics/dhrt_modal.png',
+    modalImg: '/course_pics/collegeModal/dhrt.png',
     fullDesc: 'Prepares students for the hospitality industry with intensive training in food and beverage service, housekeeping, and front office operations.'
   }
 ];

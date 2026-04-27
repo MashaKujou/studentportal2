@@ -85,7 +85,6 @@ export default function HomePage() {
           <div className="hero-school-name">College of Saint Amatiel - Malabon</div>
           <div className="hero-divider"></div>
           <h1 className="hero-tagline">Basta Amatelian,<br />Nakahanda sa Kinabukasan.</h1>
-          <p className="hero-sub">test</p>
           <div className="hero-buttons">
             <Link href="/login" className="btn-hero-primary">Login to Portal</Link>
             <Link href="/register" className="btn-hero-secondary">Create Account</Link>
