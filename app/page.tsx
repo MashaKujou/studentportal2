@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import "./home.css"
+import { programsInfo, tesdaprogramsInfo, ProgramInfo } from "@/lib/program_info"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()
@@ -23,6 +24,10 @@ export default function HomePage() {
   }, [user, isLoading, router])
 
   const [activeTab, setActiveTab] = useState('mission')
+  const [progFilter, setProgFilter] = useState<'All' | 'SHS' | 'College' | 'Tesda'>('All')
+  const [selectedProgram, setSelectedProgram] = useState<ProgramInfo | null>(null)
+  const [aboutImageIndex, setAboutImageIndex] = useState(0)
+  const aboutImages = ['/school.png', '/drone_view.png']
 
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
@@ -150,12 +155,37 @@ export default function HomePage() {
     frame.addEventListener('touchmove', handleTouchMove, { passive: false });
     frame.addEventListener('touchend', handleTouchEnd);
 
-    apply();
+    const autoFit = () => {
+      const img = canvas.querySelector('img');
+      if (!img) return;
+      const fw = frame.clientWidth;
+      const fh = frame.clientHeight;
+      
+      if (!img.complete || img.naturalWidth === 0) {
+        img.addEventListener('load', autoFit, { once: true });
+        return;
+      }
+      
+      const cw = img.naturalWidth;
+      const ch = img.naturalHeight;
+      
+      if (cw > 0 && ch > 0) {
+        const scaleX = (fw - PADDING * 2) / cw;
+        const scaleY = (fh - PADDING * 2) / ch;
+        currentScale = Math.max(Math.min(scaleX, scaleY, 1), 0.1);
+        
+        ox = (fw - cw * currentScale) / 2;
+        oy = (fh - ch * currentScale) / 2;
+        apply();
+      }
+    };
+
+    autoFit();
 
     // expose zoom controls to window so buttons can use it
     (window as any).__zoomIn = () => { currentScale = Math.min(currentScale + 0.2, 3); apply(); };
-    (window as any).__zoomOut = () => { currentScale = Math.max(currentScale - 0.2, 0.3); apply(); };
-    (window as any).__zoomReset = () => { currentScale = 1; ox = PADDING; oy = PADDING; apply(); };
+    (window as any).__zoomOut = () => { currentScale = Math.max(currentScale - 0.2, 0.1); apply(); };
+    (window as any).__zoomReset = () => { autoFit(); };
 
     return () => {
       frame.removeEventListener('wheel', handleWheel);
@@ -241,9 +271,8 @@ export default function HomePage() {
                   <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
                 </svg>
               </div>
-              <h3 className="mv-text-title">Our Mission</h3>
-              <p className="mv-body">test</p>
-              <p className="mv-body" style={{ marginTop: '1rem' }}>test</p>
+              <h3 className="mv-text-title">Saint Amatiel's Mission</h3>
+              <p className="mv-body">To promote equitable access to technical-vocational ducational as its share in the formation of a more progressive resilient and humans society of capacitated citizens in the country.</p>
             </div>
             <div className="mv-visual">
               <img src="/header.png" alt="Students at CSA" />
@@ -259,8 +288,8 @@ export default function HomePage() {
                   <circle cx="12" cy="12" r="3" /><path d="M20.188 10.934a8 8 0 1 1-16.376 0M12 21v-3" />
                 </svg>
               </div>
-              <h3 className="mv-text-title">Our Vision</h3>
-              <p className="mv-body">test</p>
+              <h3 className="mv-text-title">Saint Amatiel's Vision</h3>
+              <p className="mv-body">An academic system quality higher education of relevant technical and vocational knowledge, skills and values, industry sensitive and community service driven programs responding to the needs of the country and the global community as well.</p>
               <p className="mv-body" style={{ marginTop: '1rem' }}>test</p>
             </div>
             <div className="mv-visual">
@@ -270,28 +299,76 @@ export default function HomePage() {
           </div>
 
           {/* Hymn Panel */}
-          <div className={`mv-panel ${activeTab === 'hymn' ? 'active' : ''} reveal`} id="panel-hymn">
-            <div>
-              <div className="mv-icon-box">
+          <div className={`mv-panel ${activeTab === 'hymn' ? 'active' : ''} reveal`} id="panel-hymn" >
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              
+              <div className="mv-icon-box" style={{ margin: '0 auto 1.5rem' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" /><path d="M20.188 10.934a8 8 0 1 1-16.376 0M12 21v-3" />
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M20.188 10.934a8 8 0 1 1-16.376 0M12 21v-3" />
                 </svg>
               </div>
-              <h3 className="mv-text-title">Our Hymn</h3>
-              <p className="mv-body">test</p>
-              <p className="mv-body" style={{ marginTop: '1rem' }}>test</p>
-            </div>
-            <div className="mv-visual">
-              <img src="/header.png" alt="CSA Campus" />
-              <div className="mv-visual-overlay"></div>
+
+              <h3 className="mv-text-title">Saint Amatiel Hymn</h3>
+
+              <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
+                Hail Alma Mater, St. Amatiel <br/>
+                All the skills you bring us <br/>
+                We know we can show it
+              </p>
+
+              <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
+                Hail Alma Mater, St. Amatiel. <br/>
+                All the things we do here <br/>
+                We know we can prove it <br/>
+                We know we can prove it
+              </p>
+
+              <h3 className="mv-text-title" style={{ marginTop: '1.5rem' }}>Chorus</h3>
+
+              <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
+                All the laughter and the tears <br/>
+                Make us better person here <br/>
+                There's no greater care than this <br/>
+                You have taught our talent here <br/>
+                You have filled our experience <br/>
+                What can we miss when we're gone!
+              </p>
+
+              <p className="mv-body" style={{ marginTop: '1rem', lineHeight: '1.9' }}>
+                Hail Alma Mater, St. Amatiel <br/>
+                All the things we gain here <br/>
+                We know we can prove it
+              </p>
+
+              <h3 className="mv-text-title" style={{ marginTop: '1.5rem' }}>
+                Repeat Chorus x2
+              </h3>
+
             </div>
           </div>
 
           {/* About Section */}
           <div className="about-block reveal" style={{ marginTop: '5rem' }}>
-            <div className="about-img-wrap">
-              <img src="/school.png" alt="About CSA" />
+            <div className="about-img-wrap" style={{ position: 'relative' }}>
+              <img src={aboutImages[aboutImageIndex]} alt="About CSA" />
               <div className="about-img-badge">2010<span>Est.</span></div>
+              <button 
+                onClick={() => setAboutImageIndex((prev) => (prev - 1 + aboutImages.length) % aboutImages.length)}
+                style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(11,31,58,0.75)'}
+              >
+                ❮
+              </button>
+              <button 
+                onClick={() => setAboutImageIndex((prev) => (prev + 1) % aboutImages.length)}
+                style={{ position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(11,31,58,0.75)'}
+              >
+                ❯
+              </button>
             </div>
             <div className="about-text">
               <div className="section-label">About the School</div>
@@ -315,6 +392,51 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+
+      <section id="programs">
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div className="reveal">
+            <div className="section-label">Academic Excellence</div>
+            <h2 className="section-title">Programs Offered</h2>
+            <div className="section-underline"></div>
+            <p style={{ fontSize: '.98rem', color: 'rgba(247,242,232,.55)', marginBottom: '2rem', maxWidth: '560px', lineHeight: 1.8, fontWeight: 300 }}>
+              Discover a wide range of undergraduate and graduate programs designed to equip you for the careers of tomorrow.
+            </p>
+            <div className="programs-filter">
+              <button className={`filter-btn ${progFilter === 'All' ? 'active' : ''}`} onClick={() => setProgFilter('All')}>All Programs</button>
+              <button className={`filter-btn ${progFilter === 'SHS' ? 'active' : ''}`} onClick={() => setProgFilter('SHS')}>SHS Strands</button>
+              <button className={`filter-btn ${progFilter === 'College' ? 'active' : ''}`} onClick={() => setProgFilter('College')}>College</button>
+              <button className={`filter-btn ${progFilter === 'Tesda' ? 'active' : ''}`} onClick={() => setProgFilter('Tesda')}>Tesda</button>
+            </div>
+          </div>
+          <div className="programs-grid reveal">
+            {[...programsInfo, ...tesdaprogramsInfo]
+              .filter(p => progFilter === 'All' || p.category === progFilter)
+              .map(prog => (
+                <div key={prog.id} className="prog-card" onClick={() => setSelectedProgram(prog)}>
+                  {prog.image ? (
+                    <img src={prog.image} className="prog-img" alt={prog.name} />
+                  ) : (
+                    <div className="prog-img" style={{ background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(247,242,232,.3)' }}>CSA Program</div>
+                  )}
+                  <div className="prog-body">
+                    <span className="prog-badge">{prog.badge}</span>
+                    <div className="prog-name">{prog.name}</div>
+                    <p className="prog-desc">{prog.desc}</p>
+                  </div>
+                  <div className="prog-footer">
+                    <span className="prog-years">{prog.duration}</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+          <div className="reveal" style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link href="/register" className="btn-hero-primary" style={{ display: 'inline-block' }}>Join Us Today →</Link>
+          </div>
+        </div>
+      </section>
+
 
       <section id="faculty">
         <div className="faculty-container">
@@ -347,130 +469,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="programs">
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="reveal">
-            <div className="section-label">Academic Excellence</div>
-            <h2 className="section-title">Programs Offered</h2>
-            <div className="section-underline"></div>
-            <p style={{ fontSize: '.98rem', color: 'rgba(247,242,232,.55)', marginBottom: '3rem', maxWidth: '560px', lineHeight: 1.8, fontWeight: 300 }}>
-              Discover a wide range of undergraduate and graduate programs designed to equip you for the careers of tomorrow.
-            </p>
-          </div>
-          <div className="programs-grid reveal">
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Education" />
-              <div className="prog-body">
-                <span className="prog-badge">Senior High School Track (Academic Strand)</span>
-                <div className="prog-name">ABM</div>
-                <p className="prog-desc">Test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">2-Year Program</span>
-              </div>
-            </div>
 
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Nursing" />
-              <div className="prog-body">
-                <span className="prog-badge">Senior High School Track (Academic Strand)</span>
-                <div className="prog-name">GAS</div>
-                <p className="prog-desc">Test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">2-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="IT" />
-              <div className="prog-body">
-                <span className="prog-badge">Senior High School Track (Academic Strand)</span>
-                <div className="prog-name">HUMSS</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">2-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Business" />
-              <div className="prog-body">
-                <span className="prog-badge">Senior High School Track (Tech-Voc Strand)</span>
-                <div className="prog-name">HE</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">2-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Business" />
-              <div className="prog-body">
-                <span className="prog-badge">Senior High School Track (Tech-Voc Strand)</span>
-                <div className="prog-name">ICT</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">2-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Engineering" />
-              <div className="prog-body">
-                <span className="prog-badge">Bachelor of Science</span>
-                <div className="prog-name">BS Management Accounting</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">4-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Psychology" />
-              <div className="prog-body">
-                <span className="prog-badge">Bachelor of Science</span>
-                <div className="prog-name">Entrepreneurship</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">4-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Accountancy" />
-              <div className="prog-body">
-                <span className="prog-badge">Diploma</span>
-                <div className="prog-name">Information Technology</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">3-Year Program</span>
-              </div>
-            </div>
-
-            <div className="prog-card">
-              <img src="" className="prog-img" alt="Accountancy" />
-              <div className="prog-body">
-                <span className="prog-badge">Diploma</span>
-                <div className="prog-name">DHRT</div>
-                <p className="prog-desc">test</p>
-              </div>
-              <div className="prog-footer">
-                <span className="prog-years">3-Year Program</span>
-              </div>
-            </div>
-          </div>
-          <div className="reveal" style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <Link href="/register" className="btn-hero-primary" style={{ display: 'inline-block' }}>Join Us Today →</Link>
-          </div>
-        </div>
-      </section>
 
       <footer className="home-footer">
         <div className="footer-inner">
@@ -483,11 +482,10 @@ export default function HomePage() {
               <div className="footer-brand-name">College of Saint Amatiel</div>
             </div>
             <div className="footer-divider-gold"></div>
-            <p className="footer-tagline">Forming Hearts. Shaping Futures. Serving the community through faith, learning, and excellence since 1952.</p>
+            <p className="footer-tagline">Forming Hearts. Shaping Futures. Serving the community through faith, learning, and excellence since 2010.</p>
             <div className="footer-contact" style={{ marginTop: '1.25rem' }}>
-              <div>📍 123 Amatiel Drive, City, Philippines</div>
-              <div>📞 (02) 8-123-4567</div>
-              <div>✉️ admissions@csa.edu.ph</div>
+              <div>📍 <br/>118 Int. Gen. Luna St, Malabon, 1470 Metro Manila</div>
+              <div>📞 (02) 8351 4993</div>
             </div>
           </div>
 
@@ -500,7 +498,7 @@ export default function HomePage() {
               <li><a href="#">Faculty & Staff</a></li>
               <li><a href="#">News & Events</a></li>
               <li><a href="#">Alumni</a></li>
-            </ul>
+            </ul> 
           </div>
 
           <div>
@@ -521,6 +519,30 @@ export default function HomePage() {
           <div className="footer-motto">"Veritas et Lux" — Truth and Light</div>
         </div>
       </footer>
+
+      {selectedProgram && (
+        <div className="modal-overlay" onClick={() => setSelectedProgram(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedProgram(null)}>×</button>
+            <span className="modal-badge">{selectedProgram.badge}</span>
+            <h3 className="modal-title">{selectedProgram.name}</h3>
+            <div className="modal-subtitle">{selectedProgram.desc}</div>
+            <p className="modal-desc">{selectedProgram.fullDesc}</p>
+            {selectedProgram.requirements && selectedProgram.requirements.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ fontFamily: 'var(--sans)', fontSize: '.9rem', fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.75rem' }}>Requirements:</h4>
+                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: 'var(--text)', fontSize: '.9rem', lineHeight: '1.6', margin: 0 }}>
+                  {selectedProgram.requirements.map((req, idx) => <li key={idx} style={{ marginBottom: '.25rem' }}>{req}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="modal-footer">
+              <span className="modal-duration">{selectedProgram.duration}</span>
+              <Link href="/register" className="btn-solid" onClick={() => setSelectedProgram(null)}>Apply Now</Link>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
