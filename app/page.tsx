@@ -303,7 +303,17 @@ export default function HomePage() {
 
           <div>
             <div className="footer-col-title">Where to Find Us</div>
-            <img src="/drone_view.png" alt="Aerial view of College of Saint Amatiel campus" style={{ borderRadius: '6px', width: '100%', height: '200px', objectFit: 'cover', marginTop: '0.75rem' }} />
+            <img
+              src="/drone_view.png"
+              alt="Aerial view of College of Saint Amatiel campus"
+              style={{
+                borderRadius: "6px",
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                marginTop: "0.75rem"
+              }}
+            />
           </div>
 
           <div>
