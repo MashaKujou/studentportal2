@@ -69,6 +69,14 @@ export default function HomePage() {
             <span>Student Portal</span>
           </div>
         </div>
+
+        <ul className="header-nav-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="#programs">Programs</a></li>
+          <li><a href="#faculty">Faculty</a></li>
+          <li><a href="#footer">About School</a></li>
+        </ul>
+
         <nav className="header-nav">
           <Link href="/login" className="btn-outline">Login</Link>
           <Link href="/register" className="btn-solid">Register</Link>
@@ -282,7 +290,7 @@ export default function HomePage() {
 
 
 
-      <footer className="home-footer">
+      <footer className="home-footer" id="footer">
         <div className="footer-inner">
           <div className="footer-brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '.75rem' }}>
@@ -319,9 +327,8 @@ export default function HomePage() {
           <div>
             <div className="footer-col-title">Quick Links</div>
             <ul className="footer-links">
-              <li><a href="/">Home</a></li>
+              <li><a href="#">Home</a></li>
               <li><a href="#programs">Programs Offered</a></li>
-              <li><a href="#admissions">Admissions</a></li>
               <li><a href="#faculty">Faculty & Staff</a></li>
             </ul>
           </div>
