@@ -319,12 +319,10 @@ export default function HomePage() {
           <div>
             <div className="footer-col-title">Quick Links</div>
             <ul className="footer-links">
-              <li><a href="#">Home</a></li>
-              <li><a href="#">Programs Offered</a></li>
-              <li><a href="#">Admissions</a></li>
-              <li><a href="#">Faculty & Staff</a></li>
-              <li><a href="#">News & Events</a></li>
-              <li><a href="#">Alumni</a></li>
+              <li><a href="/">Home</a></li>
+              <li><a href="#programs">Programs Offered</a></li>
+              <li><a href="#admissions">Admissions</a></li>
+              <li><a href="#faculty">Faculty & Staff</a></li>
             </ul>
           </div>
 
@@ -333,10 +331,10 @@ export default function HomePage() {
             <ul className="footer-links">
               <li><Link href="/login">Login</Link></li>
               <li><Link href="/register">Register</Link></li>
-              <li><a href="#">Grade Inquiry</a></li>
-              <li><a href="#">Document Request</a></li>
-              <li><a href="#">Contact Admin</a></li>
-              <li><a href="#">Help & Support</a></li>
+              <li><a href="/login">Grade Inquiry</a></li>
+              <li><a href="#/login">Document Request</a></li>
+              <li><a href="#/login">Contact Admin</a></li>
+              <li><a href="#/login">Help & Support</a></li>
             </ul>
           </div>
         </div>
