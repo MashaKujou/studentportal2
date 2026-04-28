@@ -11,21 +11,32 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CSA Student Portal",
   description: "Official Student Portal for College of Saint Amatiel",
-  icons: {
-    icon: [
+
+  openGraph: {
+    title: "CSA Student Portal",
+    description: "Official Student Portal for College of Saint Amatiel",
+    url: "https://csa-studentportal.vercel.app",
+    siteName: "CSA Portal",
+    images: [
       {
-        url: "/image.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/image.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/image.png",
-        type: "image/png",
+        url: "https://csa-studentportal.vercel.app/image.png",
+        width: 1200,
+        height: 630,
+        alt: "CSA Student Portal Preview",
       },
     ],
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "CSA Student Portal",
+    description: "Official Student Portal for College of Saint Amatiel",
+    images: ["https://csa-studentportal.vercel.app/image.png"],
+  },
+
+  icons: {
+    icon: "/image.png",
     apple: "/image.png",
   },
 }
