@@ -171,7 +171,7 @@ export const tesdaprogramsInfo: ProgramInfo[] = [
     badge: 'National Certificate III',
     desc: 'Bread & Pastry Production',
     duration: 'Short Course',
-    coverImg: '/course_pics/tesda_bpp.png',
+    coverImg: '/course_pics/tesda_BPP.png',
     fullDesc: 'This program equips individuals with the necessary skills to plan, coordinate, and execute events such as conferences, corporate events, and exhibitions.',
     requirements: [
       'At lease SHS Graduate',
