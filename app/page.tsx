@@ -300,6 +300,12 @@ export default function HomePage() {
             </div>
           </div>
 
+
+          <div>
+            <div className="footer-col-title">Where to Find Us</div>
+            <img src="/drone_view.png" alt="Aerial view of College of Saint Amatiel campus" style={{ borderRadius: '6px', width: '100%', height: '200px', objectFit: 'cover', marginTop: '0.75rem' }} />
+          </div>
+
           <div>
             <div className="footer-col-title">Quick Links</div>
             <ul className="footer-links">
@@ -322,11 +328,6 @@ export default function HomePage() {
               <li><a href="#">Contact Admin</a></li>
               <li><a href="#">Help & Support</a></li>
             </ul>
-          </div>
-
-          <div>
-            <div className="footer-col-title">Where to Find Us</div>
-            <img src="/drone_view.png" alt="Aerial view of College of Saint Amatiel campus" style={{ borderRadius: '6px', width: '100%', height: '200px', objectFit: 'cover', marginTop: '0.75rem' }} />
           </div>
         </div>
 
