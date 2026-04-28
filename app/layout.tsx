@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: "CSA Student Portal",
     description: "Official Student Portal for College of Saint Amatiel",
     url: "https://csa-studentportal.vercel.app",
-    siteName: "CSA Student Portal",
+    siteName: "CSA Portal",
     images: [
       {
         url: "https://csa-studentportal.vercel.app/image.png",
