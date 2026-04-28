@@ -217,11 +217,10 @@ export default function HomePage() {
             </div>
             <div className="about-text">
               <div className="section-label">About the School</div>
-              <h2 className="section-title">A Legacy of Excellence</h2>
+              <h2 className="section-title">Welcome to Saint Amatiel College</h2>
               <div className="section-underline"></div>
-              <p className="about-body">test</p>
               <p className="about-body">
-                Accredited by the Commission on Higher Education (CHED) and recognized by various accrediting bodies, CSA offers a broad array of programs that prepare graduates for leadership roles in business, education, health sciences, technology, and the arts.
+                where we strive to build a community of learners equipped with knowledge, skills, and values to face the challenges of tomorrow. Through quality education, practical experiences, and a supportive environment, we aim to shape individuals who are ready to succeed in their chosen fields and contribute meaningfully to society.
               </p>
               <div className="about-stats">
                 <div className="stat-item">
