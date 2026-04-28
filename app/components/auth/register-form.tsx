@@ -412,9 +412,9 @@ export const RegisterForm = () => {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
-                disabled={isLoading} 
+              <Button
+                type="submit"
+                disabled={isLoading}
                 className="w-full h-11 font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 {isLoading ? "Registering..." : "Register"}
