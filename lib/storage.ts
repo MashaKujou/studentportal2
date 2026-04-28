@@ -232,6 +232,12 @@ export const userStorage = {
     }
   },
 
+  deleteStudent: (id: string): void => {
+    const students = userStorage.getStudents()
+    const filtered = students.filter((s) => s.id !== id)
+    storage.set(STORAGE_KEYS.STUDENTS, filtered)
+  },
+
   getTeachers: (): Teacher[] => {
     return storage.get<Teacher[]>(STORAGE_KEYS.TEACHERS) || []
   },
@@ -262,6 +268,12 @@ export const userStorage = {
       teachers[index] = { ...teachers[index], ...updates }
       storage.set(STORAGE_KEYS.TEACHERS, teachers)
     }
+  },
+
+  deleteTeacher: (id: string): void => {
+    const teachers = userStorage.getTeachers()
+    const filtered = teachers.filter((t) => t.id !== id)
+    storage.set(STORAGE_KEYS.TEACHERS, filtered)
   },
 
   getAdmins: (): Admin[] => {
