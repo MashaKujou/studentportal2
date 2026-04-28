@@ -26,8 +26,6 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('mission')
   const [progFilter, setProgFilter] = useState<'All' | 'SHS' | 'College' | 'Tesda'>('All')
   const [selectedProgram, setSelectedProgram] = useState<ProgramInfo | null>(null)
-  const [aboutImageIndex, setAboutImageIndex] = useState(0)
-  const aboutImages = ['/school.png', '/drone_view.png']
 
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
@@ -196,24 +194,8 @@ export default function HomePage() {
           {/* About Section */}
           <div className="about-block reveal" style={{ marginTop: '5rem' }}>
             <div className="about-img-wrap" style={{ position: 'relative' }}>
-              <img src={aboutImages[aboutImageIndex]} alt="About CSA" />
+              <img src="/school.png" alt="About CSA" />
               <div className="about-img-badge">2008<span>Est.</span></div>
-              <button
-                onClick={() => setAboutImageIndex((prev) => (prev - 1 + aboutImages.length) % aboutImages.length)}
-                style={{ position: 'absolute', top: '50%', left: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(11,31,58,0.75)'}
-              >
-                ❮
-              </button>
-              <button
-                onClick={() => setAboutImageIndex((prev) => (prev + 1) % aboutImages.length)}
-                style={{ position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', background: 'rgba(11,31,58,0.75)', color: 'white', border: '1px solid rgba(201,150,42,0.5)', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 10 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'var(--gold)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(11,31,58,0.75)'}
-              >
-                ❯
-              </button>
             </div>
             <div className="about-text">
               <div className="section-label">About the School</div>
@@ -340,6 +322,11 @@ export default function HomePage() {
               <li><a href="#">Contact Admin</a></li>
               <li><a href="#">Help & Support</a></li>
             </ul>
+          </div>
+
+          <div>
+            <div className="footer-col-title">Where to Find Us</div>
+            <img src="/drone_view.png" alt="Aerial view of College of Saint Amatiel campus" style={{ borderRadius: '6px', width: '100%', height: '200px', objectFit: 'cover', marginTop: '0.75rem' }} />
           </div>
         </div>
 
