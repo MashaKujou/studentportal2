@@ -110,6 +110,7 @@ export default function HomePage() {
             <div className="mv-tabs">
               <button className={`mv-tab ${activeTab === 'mission' ? 'active' : ''}`} onClick={() => setActiveTab('mission')}>Mission</button>
               <button className={`mv-tab ${activeTab === 'vision' ? 'active' : ''}`} onClick={() => setActiveTab('vision')}>Vision</button>
+              <button className={`mv-tab ${activeTab === 'philosophy' ? 'active' : ''}`} onClick={() => setActiveTab('philosophy')}>Philosophy</button>
               <button className={`mv-tab ${activeTab === 'hymn' ? 'active' : ''}`} onClick={() => setActiveTab('hymn')}>Hymn</button>
             </div>
           </div>
@@ -142,6 +143,23 @@ export default function HomePage() {
               <h3 className="mv-text-title">Saint Amatiel's Vision</h3>
               <p className="mv-body">An academic system quality higher education of relevant technical and vocational knowledge, skills and values, industry sensitive and community service driven programs responding to the needs of the country and the global community as well.</p>
               <p className="mv-body" style={{ marginTop: '1rem' }}>test</p>
+            </div>
+            <div className="mv-visual">
+              <img src="/header.png" alt="CSA Campus" />
+              <div className="mv-visual-overlay"></div>
+            </div>
+          </div>
+
+          {/* Philosophy */}
+          <div className={`mv-panel ${activeTab === 'philosophy' ? 'active' : ''} reveal`} id="panel-vision">
+            <div>
+              <div className="mv-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" /><path d="M20.188 10.934a8 8 0 1 1-16.376 0M12 21v-3" />
+                </svg>
+              </div>
+              <h3 className="mv-text-title">Saint Amatiel's Philosophy</h3>
+              <p className="mv-body">Education in nurturing human minds with intellect to be able to build a righteous society of mutually responsible and capacitated individuals.</p>
             </div>
             <div className="mv-visual">
               <img src="/header.png" alt="CSA Campus" />
@@ -198,6 +216,9 @@ export default function HomePage() {
 
             </div>
           </div>
+
+
+
 
           {/* About Section */}
           <div className="about-block reveal" style={{ marginTop: '5rem' }}>
