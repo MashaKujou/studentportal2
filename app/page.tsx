@@ -327,6 +327,7 @@ export default function HomePage() {
             <div className="footer-contact" style={{ marginTop: '1.25rem' }}>
               <div>📍 <br />118 Int. Gen. Luna St, Malabon, 1470 Metro Manila</div>
               <div>📞 (02) 8351 4993</div>
+              <div>📧 collegeofsaintamatiel.malabon@gmail.com</div>
             </div>
           </div>
 
@@ -366,32 +367,54 @@ export default function HomePage() {
               <li><a href="#/login">Help & Support</a></li>
             </ul>
           </div>
+
+
         </div>
+
+
 
 
         {/*Footer Other Branch Images */}
         <div className="footer-branches">
-          <h3 className="footer-title">Other Branches</h3>
           <div className="footer-images">
-            <div className="img-wrapper">
-              <img src="other_branches/footer1.png" alt="Malolos Branch" />
-              <span className="tooltip">Malolos Branch</span>
+
+            <div className="footer-images-row">
+              <div className="img-wrapper" data-tooltip="Malolos Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                <img src="other_branches/footer1.png" alt="Malolos Branch" />
+              </div>
+
+              <div className="img-wrapper" data-tooltip="Bacoor Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                <img src="other_branches/footer2.png" alt="Bacoor Branch" />
+              </div>
+
+              <div className="img-wrapper" data-tooltip="Marikina Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                <img src="other_branches/footer3.png" alt="Marikina Branch" />
+              </div>
+
+              <div className="img-wrapper" data-tooltip="Marilao Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                <img src="other_branches/footer4.png" alt="Marilao Branch" />
+              </div>
             </div>
 
-            <div className="img-wrapper">
-              <img src="other_branches/footer2.png" alt="Bacoor Branch" />
-              <span className="tooltip">Bacoor Branch</span>
+            <div style={{ marginTop: "40px", padding: "3rem" }}>
+              <div className="footer-col-title" style={{ textAlign: "center", marginBottom: "40px", fontSize: "24px" }}>Registered</div>
+              <div className="partnerships-grid">
+
+                <div className="img-wrapper" data-tooltip="Registered under DepED" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                  <img src="/other_branches/partner1.png" alt="Registered under DepED" className="img-top" />
+                </div>
+
+                <div className="img-wrapper" data-tooltip="Registered under TESDA" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                  <img src="/other_branches/partner2.png" alt="Registered under TESDA" className="img-top" />
+                </div>
+
+                <div className="img-wrapper" data-tooltip="Registered under CHED" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
+                  <img src="/other_branches/partner3.png" alt="Registered under CHED" className="img-bottom" />
+                </div>
+
+              </div>
             </div>
 
-            <div className="img-wrapper">
-              <img src="other_branches/footer3.png" alt="Marikina Branch" />
-              <span className="tooltip">Marikina Branch</span>
-            </div>
-
-            <div className="img-wrapper">
-              <img src="other_branches/footer4.png" alt="Marilao Branch" />
-              <span className="tooltip">Marilao Branch</span>
-            </div>
           </div>
         </div>
 
