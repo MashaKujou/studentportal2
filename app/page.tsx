@@ -297,7 +297,7 @@ export default function HomePage() {
         <div className="faculty-container">
           <div className="reveal">
             <div className="section-label">Our People</div>
-            <h2 className="section-title">Faculty Organizational Chart</h2>
+            <h2 className="section-title">School Organizational Chart</h2>
             <div className="section-underline" style={{ background: 'var(--gold)', marginBottom: '3rem' }}></div>
           </div>
 
