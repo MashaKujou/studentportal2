@@ -310,6 +310,7 @@ export default function HomePage() {
       </section>
 
 
+      {/*Footer */}
 
       <footer className="home-footer" id="footer">
         <div className="footer-inner">
@@ -367,6 +368,35 @@ export default function HomePage() {
           </div>
         </div>
 
+
+        {/*Footer Other Branch Images */}
+        <div className="footer-branches">
+          <h3 className="footer-title">Other Branches</h3>
+          <div className="footer-images">
+            <div className="img-wrapper">
+              <img src="other_branches/footer1.png" alt="Malolos Branch" />
+              <span className="tooltip">Malolos Branch</span>
+            </div>
+
+            <div className="img-wrapper">
+              <img src="other_branches/footer2.png" alt="Bacoor Branch" />
+              <span className="tooltip">Bacoor Branch</span>
+            </div>
+
+            <div className="img-wrapper">
+              <img src="other_branches/footer3.png" alt="Marikina Branch" />
+              <span className="tooltip">Marikina Branch</span>
+            </div>
+
+            <div className="img-wrapper">
+              <img src="other_branches/footer4.png" alt="Marilao Branch" />
+              <span className="tooltip">Marilao Branch</span>
+            </div>
+          </div>
+        </div>
+
+
+        {/*Footer Bottom */}
         <div className="footer-bottom">
           <div className="footer-copy">© 2025 College of Saint Amatiel. All rights reserved.</div>
           <div className="footer-motto">"Veritas et Lux" — Truth and Light</div>
