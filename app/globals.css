@@ -122,6 +122,63 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+.footer-branches {
+  margin-top: 130px;
+}
+
+.footer-title {
+  text-align: center;
+  /* THIS is the key fix */
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 40px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: white;
+  /* since your footer is dark */
+}
+
+.footer-images {
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+  margin-top: 80px;
+}
+
+.footer-images img {
+  width: 180px;
+  /* 3 images in one row */
+  height: 180px;
+  /* good footer height */
+  object-fit: contain;
+  /* prevents stretching */
+  border-radius: 4px;
+}
+
+.img-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: black;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.img-wrapper:hover .tooltip {
+  opacity: 1;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
