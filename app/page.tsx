@@ -379,19 +379,19 @@ export default function HomePage() {
           <div className="footer-images">
 
             <div className="footer-images-row">
-              <div className="img-wrapper" data-tooltip="Malolos Branch">
+              <div className="img-wrapper" data-tooltip="Malolos Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                 <img src="other_branches/footer1.png" alt="Malolos Branch" />
               </div>
 
-              <div className="img-wrapper" data-tooltip="Bacoor Branch">
+              <div className="img-wrapper" data-tooltip="Bacoor Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                 <img src="other_branches/footer2.png" alt="Bacoor Branch" />
               </div>
 
-              <div className="img-wrapper" data-tooltip="Marikina Branch">
+              <div className="img-wrapper" data-tooltip="Marikina Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                 <img src="other_branches/footer3.png" alt="Marikina Branch" />
               </div>
 
-              <div className="img-wrapper" data-tooltip="Marilao Branch">
+              <div className="img-wrapper" data-tooltip="Marilao Branch" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                 <img src="other_branches/footer4.png" alt="Marilao Branch" />
               </div>
             </div>
@@ -400,20 +400,21 @@ export default function HomePage() {
               <div className="footer-col-title" style={{ textAlign: "center", marginBottom: "40px", fontSize: "24px" }}>Registered</div>
               <div className="partnerships-grid">
 
-                <div className="img-wrapper" data-tooltip="Registered under DepED">
+                <div className="img-wrapper" data-tooltip="Registered under DepED" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                   <img src="/other_branches/partner1.png" alt="Registered under DepED" className="img-top" />
                 </div>
 
-                <div className="img-wrapper" data-tooltip="Registered under TESDA">
+                <div className="img-wrapper" data-tooltip="Registered under TESDA" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                   <img src="/other_branches/partner2.png" alt="Registered under TESDA" className="img-top" />
                 </div>
 
-                <div className="img-wrapper" data-tooltip="Registered under CHED">
+                <div className="img-wrapper" data-tooltip="Registered under CHED" onClick={(e) => e.currentTarget.classList.toggle('show-tooltip')}>
                   <img src="/other_branches/partner3.png" alt="Registered under CHED" className="img-bottom" />
                 </div>
 
               </div>
             </div>
+
           </div>
         </div>
 
