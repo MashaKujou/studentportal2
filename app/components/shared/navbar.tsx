@@ -113,7 +113,7 @@ export const Navbar: React.FC<{ title?: string }> = ({ title = "Student Portal" 
               </Button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg border border-border bg-background text-foreground shadow-lg">
+                <div className="fixed top-16 left-1/2 -translate-x-1/2 w-[95vw] sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:translate-x-0 mt-2 sm:w-80 max-h-96 overflow-y-auto rounded-lg border border-border bg-background text-foreground shadow-lg z-50">
                   <div className="sticky top-0 z-10 border-b border-border bg-background px-4 py-3">
                     <p className="text-sm font-semibold">Notifications</p>
                   </div>
@@ -155,11 +155,11 @@ export const Navbar: React.FC<{ title?: string }> = ({ title = "Student Portal" 
                 className="flex items-center gap-2 px-3 py-2 rounded-md bg-white text-foreground hover:bg-white/90"
               >
                 <User className="w-5 h-5" />
-                <span className="text-sm">{user.firstName} {user.middleName ? `${user.middleName.charAt(0)}.` : ""} {user.lastName}</span>
+                <span className="text-sm hidden md:inline-block">{user.firstName} {user.middleName ? `${user.middleName.charAt(0)}.` : ""} {user.lastName}</span>
               </button>
 
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-background text-foreground rounded-lg shadow-lg border border-border">
+                <div className="fixed top-16 left-1/2 -translate-x-1/2 w-[95vw] sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:translate-x-0 mt-2 sm:w-64 bg-background text-foreground rounded-lg shadow-lg border border-border z-50">
                   <div className="p-4 border-b border-border">
                     <p className="font-semibold text-sm">
                       {user.firstName} {user.middleName ? `${user.middleName} ` : ""}{user.lastName}

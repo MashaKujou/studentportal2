@@ -34,7 +34,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ children }) 
     <ProtectedRoute allowedRoles={["teacher"]}>
       <Navbar title={getNavbarTitle(user)} />
       <div className="flex flex-col min-h-screen bg-background">
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 max-w-7xl mx-auto w-full">{children}</main>
         <BottomNav items={navItems} />
       </div>
     </ProtectedRoute>
