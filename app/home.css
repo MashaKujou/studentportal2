@@ -327,6 +327,8 @@ html {
 
 .mv-tabs {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 0;
   border: 1.5px solid rgba(201, 150, 42, .35);
   border-radius: 10px;
@@ -661,8 +663,13 @@ html {
   max-width: 1100px;
   margin: 0 auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   align-items: flex-start;
+}
+
+.footer-inner > div {
+  flex: 1 1 200px;
 }
 
 .footer-brand-name {
@@ -910,15 +917,34 @@ html {
 
 @media (max-width: 768px) {
   .home-header {
-    padding: 0 1.2rem;
+    padding: 0 1rem;
+  }
+
+  .header-logo {
+    width: 32px;
+    height: 32px;
   }
 
   .header-title {
     font-size: .82rem;
   }
+  
+  .header-nav-links {
+    display: none;
+  }
+  
+  .btn-outline, .btn-solid {
+    padding: .35rem .8rem;
+    font-size: .75rem;
+  }
 
   .mv-panel.active {
     grid-template-columns: 1fr;
+  }
+  
+  .mv-tab {
+    padding: .65rem 1rem;
+    font-size: .8rem;
   }
 
   .about-block {
@@ -927,12 +953,17 @@ html {
   }
 
   .footer-inner {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 2rem;
+  }
+  
+  .footer-inner > div {
+    margin-left: 0 !important;
   }
 
   .footer-bottom {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
   }
 }
