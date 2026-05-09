@@ -30,34 +30,6 @@ export const StudentGrades = () => {
         <p className="text-muted-foreground">Your academic performance</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">GPA</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gradesData.gpa.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gradesData.average.toFixed(1)}%</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Grades</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gradesData.grades.length}</div>
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>
