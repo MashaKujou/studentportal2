@@ -154,6 +154,19 @@ export const RegisterForm = () => {
     e.preventDefault()
     setErrors({})
 
+    const isAllEmpty =
+      !formData.email &&
+      !formData.password &&
+      !formData.confirmPassword &&
+      !formData.firstName &&
+      !formData.lastName &&
+      !formData.studentId
+
+    if (isAllEmpty) {
+      setErrors({ form: "Please fill up all fields" })
+      return
+    }
+
     const validation = validateRegistrationForm({
       email: formData.email,
       password: formData.password,
@@ -164,7 +177,13 @@ export const RegisterForm = () => {
     })
 
     if (!validation.valid) {
-      setErrors(validation.errors)
+      const firstError = Object.values(validation.errors)[0] as string
+      setErrors({ form: firstError })
+      return
+    }
+
+    if (!formData.studentId) {
+      setErrors({ form: "Student ID is required" })
       return
     }
 
@@ -183,11 +202,6 @@ export const RegisterForm = () => {
     const emailError = validateEmailFormat()
     if (emailError) {
       setErrors({ form: emailError })
-      return
-    }
-
-    if (!formData.studentId) {
-      setErrors({ form: "Student ID is required" })
       return
     }
 
