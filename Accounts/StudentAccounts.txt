@@ -1,0 +1,59 @@
+===========================================
+STUDENT ACCOUNTS
+===========================================
+Last Updated: 11/14/2025, 6:16:30 PM
+
+Account 1:
+-----------
+Name: Masha Kujou
+Email: MashaKujou@gmail.com
+Password: MashaKujou09
+ID: STU1762956357172
+Status: pending
+Academic Level: undefined
+Year: undefined
+Course/Strand: N/A
+
+Account 2:
+-----------
+Name: Masha Kujou
+Email: MariaKujou@gmail.com
+Password: MashaKujou09
+ID: STU1762957079165
+Status: approved
+Academic Level: diploma
+Year: 3
+Course/Strand: DIT
+
+Account 3:
+-----------
+Name: Maria Student
+Email: student_senior@test.com
+Password: Student123!
+ID: 1762957360841_s9i30p1u4
+Status: approved
+Academic Level: senior_high
+Year: undefined
+Course/Strand: STEM
+
+Account 4:
+-----------
+Name: Juan Diploma
+Email: student_diploma@test.com
+Password: Student123!
+ID: 1762957360841_4k1kdbhkp
+Status: approved
+Academic Level: diploma
+Year: 2
+Course/Strand: DIT
+
+Account 5:
+-----------
+Name: Ana Bachelor
+Email: student_bachelor@test.com
+Password: Student123!
+ID: 1762957360841_zj51rrqqo
+Status: approved
+Academic Level: bachelor
+Year: 3
+Course/Strand: BTVTED

@@ -1,0 +1,13 @@
+===========================================
+TEACHER ACCOUNTS
+===========================================
+Last Updated: 11/14/2025, 6:37:29 PM
+
+Account 1:
+-----------
+Name: John Instructor
+Email: teacher@test.com
+Password: Teacher123!
+ID: 1762957360840_0dnak2s8m
+Department: Information Technology
+Subjects: Web Development,Database
