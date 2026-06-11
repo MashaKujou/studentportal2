@@ -63,6 +63,17 @@ export const REQUEST_STATUS = {
   COMPLETED: "completed",
 } as const
 
+export const TEACHER_REQUEST_TYPES = [
+  { value: "leave_of_absence" as const, label: "Leave of Absence" },
+  { value: "make_up_class" as const, label: "Make Up Class" },
+] as const
+
+export const TEACHER_REQUEST_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+} as const
+
 export const GRADE_STATUS = {
   DRAFT: "draft",
   SUBMITTED: "submitted",
@@ -210,6 +221,7 @@ export const STORAGE_KEYS = {
   CAMPUS_RESOURCES: "student_portal_campus_resources",
   FEEDBACK: "student_portal_feedback",
   USER_PREFERENCES: "student_portal_user_preferences",
+  TEACHER_REQUESTS: "student_portal_teacher_requests",
 } as const
 
 export const PAGINATION = {

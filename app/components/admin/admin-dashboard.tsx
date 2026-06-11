@@ -18,6 +18,7 @@ import {
   Settings,
   DollarSign,
   Bell,
+  ClipboardList,
 } from "lucide-react"
 
 interface AdminDashboardProps {
@@ -35,6 +36,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ children }) => {
     { label: "Grades", href: "/admin/grade-approval", icon: <CheckCircle className="w-5 h-5" /> },
     { label: "Financial", href: "/admin/financial", icon: <DollarSign className="w-5 h-5" /> },
     { label: "Requests", href: "/admin/requests", icon: <MessageCircle className="w-5 h-5" /> },
+    { label: "Teacher Requests", href: "/admin/teacher-requests", icon: <ClipboardList className="w-5 h-5" /> },
     { label: "Messages", href: "/admin/messages", icon: <MessageCircle className="w-5 h-5" /> },
     { label: "Notifications", href: "/admin/notifications", icon: <Bell className="w-5 h-5" /> },
     { label: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="w-5 h-5" /> },

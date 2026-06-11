@@ -153,8 +153,33 @@ export interface RequestMessage {
   id: string
   requestId: string
   senderId: string
-  senderRole: "student" | "admin"
+  senderRole: "student" | "admin" | "teacher"
   message: string
+  createdAt: string
+}
+
+export interface TeacherRequest {
+  id: string
+  teacherId: string
+  teacherName: string
+  type: "leave_of_absence" | "make_up_class"
+  status: "pending" | "approved" | "rejected"
+  // Leave of Absence fields
+  startDate?: string
+  endDate?: string
+  reasonForLeave?: string
+  // Make Up Class fields
+  subject?: string
+  subjectCode?: string
+  originalDate?: string
+  originalTime?: string
+  proposedDate?: string
+  proposedTime?: string
+  reasonForMakeUp?: string
+  // Common
+  adminResponse?: string
+  respondedAt?: string
+  respondedBy?: string
   createdAt: string
 }
 
@@ -574,6 +599,59 @@ export const requestMessagesStorage = {
     messages.push(newMessage)
     storage.set("request_messages", messages)
     return newMessage
+  },
+}
+
+export const teacherRequestsStorage = {
+  getAll: (): TeacherRequest[] => {
+    return storage.get<TeacherRequest[]>(STORAGE_KEYS.TEACHER_REQUESTS) || []
+  },
+
+  getByTeacherId: (teacherId: string): TeacherRequest[] => {
+    return teacherRequestsStorage.getAll().filter((r) => r.teacherId === teacherId)
+  },
+
+  getByStatus: (status: TeacherRequest["status"]): TeacherRequest[] => {
+    return teacherRequestsStorage.getAll().filter((r) => r.status === status)
+  },
+
+  getByType: (type: TeacherRequest["type"]): TeacherRequest[] => {
+    return teacherRequestsStorage.getAll().filter((r) => r.type === type)
+  },
+
+  create: (request: Omit<TeacherRequest, "id" | "createdAt">): TeacherRequest => {
+    const newRequest: TeacherRequest = {
+      ...request,
+      id: generateId("TCHREQ"),
+      createdAt: new Date().toISOString(),
+    }
+    const requests = teacherRequestsStorage.getAll()
+    requests.push(newRequest)
+    storage.set(STORAGE_KEYS.TEACHER_REQUESTS, requests)
+    return newRequest
+  },
+
+  updateStatus: (id: string, status: TeacherRequest["status"], adminResponse?: string, respondedBy?: string): void => {
+    const requests = teacherRequestsStorage.getAll()
+    const index = requests.findIndex((r) => r.id === id)
+    if (index !== -1) {
+      requests[index] = {
+        ...requests[index],
+        status,
+        adminResponse: adminResponse || requests[index].adminResponse,
+        respondedAt: new Date().toISOString(),
+        respondedBy: respondedBy || requests[index].respondedBy,
+      }
+      storage.set(STORAGE_KEYS.TEACHER_REQUESTS, requests)
+    }
+  },
+
+  delete: (id: string): void => {
+    const requests = teacherRequestsStorage.getAll()
+    storage.set(
+      STORAGE_KEYS.TEACHER_REQUESTS,
+      requests.filter((r) => r.id !== id),
+    )
   },
 }
 
