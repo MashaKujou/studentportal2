@@ -334,16 +334,19 @@ export default function HomePage() {
 
           <div>
             <div className="footer-col-title">Where to Find Us</div>
-            <img
-              src="/drone_view.png"
-              alt="Aerial view of College of Saint Amatiel campus"
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1206!2d120.9502175!3d14.6624827!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b4519c9c9423%3A0xdb19fe86b56ba525!2sCollege%20Of%20St.%20Amatiel!5e1!3m2!1sen!2sph!4v1"
+              title="Aerial Map View — College of Saint Amatiel"
               style={{
                 borderRadius: "6px",
                 width: "100%",
-                height: "200px",
-                objectFit: "cover",
+                height: "300px",
+                border: "0",
                 marginTop: "0.75rem"
               }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
             />
           </div>
 
